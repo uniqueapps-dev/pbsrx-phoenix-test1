@@ -3085,13 +3085,68 @@ function rwResolveLater(pid,type){
 // ── Inline panel renderer ─────────────────────────────────────────────────
 function rwOpenInline(pid,type){
   // pid may be string (migrated products) or number — do not coerce
-  if(rwExpandedPid===pid&&rwExpandedType===type){
-    rwExpandedPid=null; rwExpandedType=null;
-    renderReviewWorkspace(); return;
+  var collapsing=(rwExpandedPid===pid&&rwExpandedType===type);
+  var prevPid=rwExpandedPid, prevType=rwExpandedType;
+
+  // PERF EXPERIMENT: expand/collapse only changes which card shows its
+  // inline panel — it never changes the task set, filter, sort, badge, or
+  // summary strip (those are only touched by save/filter/sort/resolve
+  // paths, which still call the full renderReviewWorkspace()). So this can
+  // patch just the affected card(s) instead of rebuilding #rwTaskList.
+  // Falls back to the original full-render behavior whenever the target
+  // card isn't currently a rendered DOM node (e.g. list not yet painted,
+  // or the task is hidden by the active filter) — full render remains
+  // correct in every case, this is purely a fast path.
+  var targetCard=rwFindTaskCardEl(pid,type);
+  var tasks=targetCard?generateReviewTasks():null;
+  var targetTask=tasks?tasks.find(function(x){return String(x.pid)===String(pid)&&x.type===type;}):null;
+
+  if(!targetCard||!targetTask){
+    rwExpandedPid=collapsing?null:pid;
+    rwExpandedType=collapsing?null:type;
+    renderReviewWorkspace();
+    if(!collapsing) rwScrollInlinePanelIntoView();
+    return;
   }
-  rwExpandedPid=pid; rwExpandedType=type;
-  renderReviewWorkspace();
-  // Scroll inline panel into view
+
+  rwExpandedPid=collapsing?null:pid;
+  rwExpandedType=collapsing?null:type;
+
+  var prod=S.products.find(function(x){return String(x.id)===String(pid);});
+  var siblingTasks=tasks.filter(function(x){return String(x.pid)===String(pid);});
+  rwPatchTaskCardEl(targetCard,targetTask,prod,!collapsing,siblingTasks);
+
+  // If a different card was previously expanded, collapse it locally too —
+  // matches what a full re-render would do (only one card open at a time).
+  if(prevPid!==null&&!(String(prevPid)===String(pid)&&prevType===type)){
+    var prevCard=rwFindTaskCardEl(prevPid,prevType);
+    var prevTask=prevCard?tasks.find(function(x){return String(x.pid)===String(prevPid)&&x.type===prevType;}):null;
+    if(prevCard&&prevTask){
+      var prevProd=S.products.find(function(x){return String(x.id)===String(prevPid);});
+      var prevSiblings=tasks.filter(function(x){return String(x.pid)===String(prevPid);});
+      rwPatchTaskCardEl(prevCard,prevTask,prevProd,false,prevSiblings);
+    }
+  }
+
+  if(!collapsing) rwScrollInlinePanelIntoView();
+}
+
+// Replaces one card element in place with freshly-built HTML for the same
+// pid+type — same markup rwBuildTaskCardHtml() would have produced inside a
+// full renderReviewWorkspace() pass, just scoped to a single DOM node.
+function rwPatchTaskCardEl(cardEl,task,prod,isExpanded,siblingTasks){
+  var wrapper=document.createElement('div');
+  wrapper.innerHTML=rwBuildTaskCardHtml(task,prod,isExpanded,siblingTasks.length-1,siblingTasks);
+  cardEl.replaceWith(wrapper.firstElementChild);
+}
+
+function rwScrollInlinePanelIntoView(){
+  // Preserves prior behavior exactly, including its existing no-op: since
+  // RC3, #rwInlinePanel is always hidden (renderReviewWorkspace() sets
+  // display:none unconditionally — the inline panel now renders embedded
+  // inside each card instead), so this scrollIntoView has been inert in
+  // production before this change too. Left unchanged to avoid altering
+  // behavior beyond the tap-path DOM-rebuild scope of this experiment.
   setTimeout(function(){
     var el=document.getElementById('rwInlinePanel');
     if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'});
@@ -3474,10 +3529,6 @@ function renderReviewWorkspace(){
     return;
   }
 
-  var priColors={1:'var(--red)',2:'var(--ora)',3:'var(--grn)',4:'var(--mut)'};
-  var priBg={1:'var(--red2)',2:'rgba(249,115,22,0.12)',3:'rgba(34,197,94,0.08)',4:'var(--surf)'};
-  var priLabel={1:'P1',2:'P2',3:'P3',4:'P4'};
-
   // Build task cards
   var html='<div style="font-size:11px;color:var(--mut);font-weight:700;padding:4px 0 8px;">'+
     filtered.length+' task'+(filtered.length!==1?'s':'')+' &middot; Tap to resolve</div>';
@@ -3502,42 +3553,67 @@ function renderReviewWorkspace(){
 
   filtered.forEach(function(t,idx){
     var prod=prodMap[t.pid];
-    var score=prod?t.score:0;
-    var scoreColor=score>=80?'var(--grn)':score>=50?'var(--ora)':'var(--red)';
-    var barPct=score;
     var isExpanded=(t.pid===rwExpandedPid&&t.type===rwExpandedType);
     var allTasksForPid=tasksByPid[t.pid]||[];
     var otherCount=allTasksForPid.length-1;
-
-    html+='<div data-rwtap="1" data-pid="'+t.pid+'" data-type="'+t.type+'" style="background:'+priBg[t.pri]+';border:1px solid '+(isExpanded?'var(--amb)':'var(--bdr)')+';border-radius:12px;padding:12px 14px;margin-bottom:6px;cursor:pointer;touch-action:manipulation;user-select:none;">'+'<div class="rw-card-header" style="display:flex;align-items:center;gap:10px;">'+
-      '<div style="font-size:20px;flex-shrink:0;">'+t.icon+'</div>'+
-      '<div style="flex:1;min-width:0;">'+
-        '<div style="font-size:13px;font-weight:800;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+t.title+'</div>'+
-        '<div style="font-size:11px;color:var(--mut);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+t.desc+'</div>'+
-        '<div style="margin-top:5px;display:flex;align-items:center;gap:6px;">'+
-          '<div style="flex:1;height:3px;background:var(--bdr);border-radius:2px;overflow:hidden;"><div style="width:'+barPct+'%;height:100%;background:'+scoreColor+';border-radius:2px;"></div></div>'+
-          '<span style="font-size:9px;color:'+scoreColor+';font-weight:800;flex-shrink:0;">'+score+'%</span>'+
-          (otherCount>0?'<span style="font-size:9px;color:var(--mut);">+'+otherCount+' more</span>':'')+
-        '</div>'+
-      '</div>'+
-      '<div style="flex-shrink:0;display:flex;align-items:center;gap:5px;">'+
-        '<span style="font-size:9px;font-weight:900;color:'+priColors[t.pri]+';background:'+priBg[t.pri]+';border:1px solid '+priColors[t.pri]+';border-radius:6px;padding:2px 5px;">'+priLabel[t.pri]+'</span>'+
-        '<span style="font-size:16px;color:var(--mut);">'+(isExpanded?'&#8963;':'&#8964;')+'</span>'+
-      '</div>'+
-      '</div>';
-
-    // Inline edit panel rendered directly after the expanded card
-    if(isExpanded&&prod){
-      html+='<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr);">'+
-        renderRwInlinePanel(prod,t.type,allTasksForPid)+
-      '</div>';
-    }
-
-    html+='</div>';
+    html+=rwBuildTaskCardHtml(t,prod,isExpanded,otherCount,allTasksForPid);
   });
 
   el.innerHTML=html;
   if(inlineEl)inlineEl.style.display='none'; // inline panel is now embedded in cards
+}
+
+// ── Single task-card HTML builder (shared by full render and the local ─────
+// tap-path update in rwOpenInline) — extracted verbatim from the former
+// inline loop body so output is byte-identical in both call sites.
+function rwBuildTaskCardHtml(t,prod,isExpanded,otherCount,allTasksForPid){
+  var priColors={1:'var(--red)',2:'var(--ora)',3:'var(--grn)',4:'var(--mut)'};
+  var priBg={1:'var(--red2)',2:'rgba(249,115,22,0.12)',3:'rgba(34,197,94,0.08)',4:'var(--surf)'};
+  var priLabel={1:'P1',2:'P2',3:'P3',4:'P4'};
+  var score=prod?t.score:0;
+  var scoreColor=score>=80?'var(--grn)':score>=50?'var(--ora)':'var(--red)';
+  var barPct=score;
+
+  var html='<div data-rwtap="1" data-pid="'+t.pid+'" data-type="'+t.type+'" style="background:'+priBg[t.pri]+';border:1px solid '+(isExpanded?'var(--amb)':'var(--bdr)')+';border-radius:12px;padding:12px 14px;margin-bottom:6px;cursor:pointer;touch-action:manipulation;user-select:none;">'+'<div class="rw-card-header" style="display:flex;align-items:center;gap:10px;">'+
+    '<div style="font-size:20px;flex-shrink:0;">'+t.icon+'</div>'+
+    '<div style="flex:1;min-width:0;">'+
+      '<div style="font-size:13px;font-weight:800;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+t.title+'</div>'+
+      '<div style="font-size:11px;color:var(--mut);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+t.desc+'</div>'+
+      '<div style="margin-top:5px;display:flex;align-items:center;gap:6px;">'+
+        '<div style="flex:1;height:3px;background:var(--bdr);border-radius:2px;overflow:hidden;"><div style="width:'+barPct+'%;height:100%;background:'+scoreColor+';border-radius:2px;"></div></div>'+
+        '<span style="font-size:9px;color:'+scoreColor+';font-weight:800;flex-shrink:0;">'+score+'%</span>'+
+        (otherCount>0?'<span style="font-size:9px;color:var(--mut);">+'+otherCount+' more</span>':'')+
+      '</div>'+
+    '</div>'+
+    '<div style="flex-shrink:0;display:flex;align-items:center;gap:5px;">'+
+      '<span style="font-size:9px;font-weight:900;color:'+priColors[t.pri]+';background:'+priBg[t.pri]+';border:1px solid '+priColors[t.pri]+';border-radius:6px;padding:2px 5px;">'+priLabel[t.pri]+'</span>'+
+      '<span style="font-size:16px;color:var(--mut);">'+(isExpanded?'&#8963;':'&#8964;')+'</span>'+
+    '</div>'+
+    '</div>';
+
+  // Inline edit panel rendered directly after the expanded card
+  if(isExpanded&&prod){
+    html+='<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr);">'+
+      renderRwInlinePanel(prod,t.type,allTasksForPid)+
+    '</div>';
+  }
+
+  html+='</div>';
+  return html;
+}
+
+// ── Locate an existing rendered task-card element by pid+type ──────────────
+// Used by rwOpenInline() to patch a single card in place instead of
+// rebuilding #rwTaskList wholesale. Returns null if not currently rendered
+// (e.g. hidden by the active filter) — callers fall back to a full render.
+function rwFindTaskCardEl(pid,type){
+  var list=document.getElementById('rwTaskList');
+  if(!list) return null;
+  var cards=list.querySelectorAll('[data-rwtap="1"]');
+  for(var i=0;i<cards.length;i++){
+    if(cards[i].dataset.pid===String(pid)&&cards[i].dataset.type===type) return cards[i];
+  }
+  return null;
 }
 
 // ── Dashboard renderer ────────────────────────────────────────────────────
