@@ -27,6 +27,23 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
+      # Test-deployment-only cache-busting: the app's sw.js caches its shell
+      # (index.html, manifest.json, icons) cache-first with no expiry, and a
+      # browser/PWA only re-installs the worker when sw.js's own bytes change.
+      # Since this repo only ever gets the changed application file(s) copied
+      # in, sw.js's committed CACHE_NAME never changes between test deploys,
+      # so a device that already visited this origin once never sees updates.
+      # This step deterministically stamps CACHE_NAME with the exact commit
+      # SHA being deployed, in the CI workspace only — it does not modify the
+      # committed sw.js blob in this repo, and has no effect on
+      # pbsrx-phoenix-release or the Batch 1 source commit.
+      - name: Stamp service-worker cache version with deployed commit SHA
+        run: |
+          short_sha="${GITHUB_SHA::7}"
+          sed -i "s/\(var CACHE_NAME *= *'[^']*\)'/\1-${short_sha}'/" sw.js
+          echo "Resulting sw.js CACHE_NAME line:"
+          grep CACHE_NAME sw.js
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
