@@ -481,7 +481,7 @@ body{background:var(--bg);}
 <!-- STEP 1 -->
 <div style="background:linear-gradient(135deg,rgba(26,95,168,0.12),rgba(99,102,241,0.08));border:1.5px solid var(--blu);border-radius:16px;padding:14px;margin-bottom:10px;position:relative;">
 <div style="font-size:10px;font-weight:900;color:var(--blu);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">&#9312; FIND PRODUCT</div>
-<input class="fi" id="pos_name" placeholder="&#128269; Type drug name e.g. Paracetamol, Amoxil..." autocomplete="off" oninput="posSearch()" onfocus="posSearch()" style="font-size:15px;margin:0 0 0 0;">
+<input class="fi" id="pos_name" placeholder="&#128269; Type drug name e.g. Paracetamol, Amoxil..." autocomplete="off" oninput="posSearch()" onfocus="posSearch()" onkeydown="posNameKeydown(event)" style="font-size:15px;margin:0 0 0 0;">
 <!-- Custom search dropdown — replaces datalist -->
 <div id="posDropdown" style="display:none;position:absolute;left:14px;right:14px;top:calc(100% - 4px);background:var(--card);border:1.5px solid var(--blu);border-radius:0 0 14px 14px;max-height:260px;overflow-y:auto;z-index:9000;box-shadow:0 8px 24px rgba(0,0,0,0.4);">
 <div id="posDropdownList"></div>
@@ -497,8 +497,8 @@ body{background:var(--bg);}
 </div>
 <div id="posUnitButtons" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;"></div>
 <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:8px;">
-<div style="flex:1;"><label class="fl">Quantity</label><input class="fi" id="pos_qty" type="number" inputmode="decimal" pattern="[0-9]*" value="1" min="1" oninput="posCalcLine()" onfocus="this.select()" onclick="this.select()" autocomplete="off" style="font-size:20px;font-weight:900;text-align:center;"></div>
-<div style="flex:1;"><label class="fl">Unit Price (&#8358;)</label><input class="fi" autocomplete="off" id="pos_price" type="number" inputmode="numeric" oninput="posCalcLine()" style="font-size:16px;font-weight:800;"></div>
+<div style="flex:1;"><label class="fl">Quantity</label><input class="fi" id="pos_qty" type="number" inputmode="decimal" pattern="[0-9]*" value="1" min="1" oninput="posCalcLine()" onfocus="this.select()" onclick="this.select()" onkeydown="posQtyPriceKeydown(event)" autocomplete="off" style="font-size:20px;font-weight:900;text-align:center;"></div>
+<div style="flex:1;"><label class="fl">Unit Price (&#8358;)</label><input class="fi" autocomplete="off" id="pos_price" type="number" inputmode="numeric" oninput="posCalcLine()" onkeydown="posQtyPriceKeydown(event)" style="font-size:16px;font-weight:800;"></div>
 </div>
 <div id="posLineTotal" style="font-size:18px;font-weight:900;color:var(--grn);text-align:center;display:none;padding:10px;background:rgba(34,197,94,0.1);border-radius:10px;margin-bottom:8px;"></div>
 <div id="posStockWarn" style="display:none;" class="al ao"><div class="ai">&#9888;</div><div class="at" id="posStockWarnMsg"></div></div>
@@ -519,6 +519,8 @@ body{background:var(--bg);}
 <span style="font-family:var(--fh);font-size:22px;color:var(--txt);" id="posSubtotal">&#8358;0</span>
 </div>
 
+<button id="custToggle" onclick="toggleCustSection()" style="background:var(--surf);border:1px solid var(--bdr);border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;color:var(--mut);cursor:pointer;width:100%;text-align:left;margin-bottom:6px;">&#128100; Customer details (optional) &#9660;</button>
+<div id="custSection" style="display:none;margin-bottom:8px;">
 <div class="fg acw" style="margin-bottom:8px;">
 <label class="fl">&#128100; Customer name (optional)</label>
 <input class="fi" autocomplete="off" id="pos_customer" placeholder="Type or leave blank" list="custSuggestions" oninput="posPrefillCustPhone()">
@@ -527,6 +529,7 @@ body{background:var(--bg);}
 <div class="fg">
 <label class="fl">📱 WhatsApp Number (for receipt)</label>
 <input class="fi" autocomplete="off" id="pos_cust_phone" type="tel" inputmode="numeric" placeholder="e.g. 08012345678 — optional">
+</div>
 </div>
 
 <button id="discToggle" onclick="toggleDiscSection()" style="background:var(--surf);border:1px solid var(--bdr);border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;color:var(--mut);cursor:pointer;width:100%;text-align:left;margin-bottom:6px;">&#127991;&#65039; Add Discount (optional) &#9660;</button>
@@ -547,6 +550,7 @@ body{background:var(--bg);}
 <div class="fg"><label class="fl">&#128181; Cash received (&#8358;)</label><input class="fi" autocomplete="off" id="pos_cash" type="number" inputmode="numeric" placeholder="0" oninput="posCalcChange()" style="font-size:16px;font-weight:800;"></div>
 <div class="fg"><label class="fl">&#128242; Transfer (&#8358;)</label><input class="fi" autocomplete="off" id="pos_transfer" type="number" inputmode="numeric" placeholder="0" oninput="posCalcChange()"></div>
 </div>
+<div class="fg" style="margin-bottom:8px;"><label class="fl">&#128179; Card / POS (&#8358;)</label><input class="fi" autocomplete="off" id="pos_card" type="number" inputmode="numeric" placeholder="0" oninput="posCalcChange()"></div>
 
 <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:10px;margin-bottom:8px;border:1px solid var(--grn);background:var(--grn2);">
 <span style="font-size:13px;color:var(--grn);font-weight:800;">CHANGE</span>
@@ -555,6 +559,7 @@ body{background:var(--bg);}
 <div id="pos_payBreakdown" style="display:none;padding:10px 12px;border-radius:10px;background:var(--surf);border:1px solid var(--bdr);margin-bottom:8px;font-size:12px;">
   <div style="font-weight:800;color:var(--mut);font-size:10px;text-transform:uppercase;margin-bottom:6px;">Payment Breakdown</div>
   <div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="color:var(--mut);">Cash</span><span id="ppb_cash" style="font-weight:800;color:var(--txt);">&#8358;0</span></div>
+  <div id="ppb_crow" style="display:none;justify-content:space-between;margin-bottom:3px;"><span style="color:var(--mut);">Card/POS</span><span id="ppb_card" style="font-weight:800;color:var(--pur);">&#8358;0</span></div>
   <div id="ppb_trow" style="display:none;justify-content:space-between;margin-bottom:3px;"><span style="color:var(--mut);">Transfer</span><span id="ppb_transfer" style="font-weight:800;color:var(--blu);">&#8358;0</span></div>
   <div style="display:flex;justify-content:space-between;padding-top:5px;border-top:1px solid var(--bdr);"><span style="font-weight:800;">Total Collected</span><span id="ppb_total" style="font-weight:900;color:var(--grn);">&#8358;0</span></div>
 </div>
@@ -6670,43 +6675,7 @@ toast((isNew?'Added: ':'Updated: ')+gen+(qty>0?' — '+qty+' units stocked':''),
 // ══ POS SYSTEM ═══════════════════════════════════════════════════════════════
 var basket=[];var posSelectedProd=null;
 
-// Active-basket persistence: survives app/process restart (e.g. Android recent-apps swipe-away).
-// Same localStorage approach as heldBaskets (PCIR-019), kept in its own key so it never
-// mixes with the explicit Hold Basket list.
-var ACTIVE_BASKET_KEY='pbsrx_active_basket';
-// One-shot snapshot of an unfinished sale from a previous session. Never auto-applied —
-// renderPOS() prompts the user before touching the live basket, then clears this.
-var _pendingActiveBasket=(function(){
-try{
-var raw=localStorage.getItem(ACTIVE_BASKET_KEY);
-if(!raw)return null;
-var d=JSON.parse(raw);
-if(d&&Array.isArray(d.basket)&&d.basket.length)return d;
-}catch(e){}
-return null;
-}());
-function persistActiveBasket(){
-try{
-if(basket.length)localStorage.setItem(ACTIVE_BASKET_KEY,JSON.stringify({basket:basket,discount:posDiscount}));
-else localStorage.removeItem(ACTIVE_BASKET_KEY);
-}catch(e){}
-}
-
 function renderPOS(){
-if(_pendingActiveBasket){
-var pend=_pendingActiveBasket;_pendingActiveBasket=null;
-if(!basket.length){
-var pTot=pend.basket.reduce(function(s,i){return s+i.total;},0);
-if(confirm('An unfinished sale was found from your last session ('+pend.basket.length+' item(s) — '+N(pTot)+').\n\nResume it?')){
-basket=pend.basket;posDiscount=pend.discount||0;
-toast('Unfinished sale restored',2000);
-}else{
-try{localStorage.removeItem(ACTIVE_BASKET_KEY);}catch(e){}
-}
-}else{
-try{localStorage.removeItem(ACTIVE_BASKET_KEY);}catch(e){}
-}
-}
 renderBasket();renderPosSalesLog();
 var bd=document.getElementById('basketDate');if(bd)bd.textContent=td();
 updPosSuggestions();
@@ -6893,6 +6862,39 @@ var open=sec.style.display!=='none';
 sec.style.display=open?'none':'block';
 if(btn)btn.innerHTML=(open?'&#127991;&#65039; Add Discount (optional) &#9660;':'&#127991;&#65039; Discount &#9650;');
 }
+function toggleCustSection(){
+var sec=document.getElementById('custSection');
+var btn=document.getElementById('custToggle');
+if(!sec)return;
+var open=sec.style.display!=='none';
+sec.style.display=open?'none':'block';
+if(btn)btn.innerHTML=(open?'&#128100; Customer details (optional) &#9660;':'&#128100; Customer details &#9650;');
+}
+// Android "Go"/"Enter" on the product search box: only auto-select when the
+// current query matches exactly one product (same match rule as posSearch()).
+// Ambiguous (0 or 2+ matches) does nothing — never guesses among candidates.
+function posNameKeydown(e){
+if(e.key!=='Enter'&&e.keyCode!==13)return;
+var inp=document.getElementById('pos_name');
+var q=(inp?inp.value.trim():'').toLowerCase();
+if(!q)return;
+var matches=S.products.filter(function(p){
+var nameMatch=(p.genericName||'').toLowerCase().includes(q);
+var brandMatch=(p.brandName||'').toLowerCase().includes(q);
+var strengthMatch=(p.strength||'').toLowerCase().includes(q);
+return nameMatch||brandMatch||strengthMatch;
+});
+if(matches.length===1){
+e.preventDefault();
+posSelectFromDropdown(matches[0].id);
+}
+}
+// Android "Go"/"Enter" on quantity/price: same action as tapping Add to Basket.
+function posQtyPriceKeydown(e){
+if(e.key!=='Enter'&&e.keyCode!==13)return;
+e.preventDefault();
+posAddItem();
+}
 function posCalcLine(){
 var qty=Number(document.getElementById('pos_qty').value)||0;
 var price=Number(document.getElementById('pos_price').value)||0;
@@ -6929,7 +6931,6 @@ var srch=document.getElementById('pos_name');if(srch)srch.focus();
 toast(p.genericName+' ('+unitName+') added to basket',1500);
 }
 function renderBasket(){
-persistActiveBasket();
 var el=document.getElementById('posBasket');if(!el)return;
 var tot=basket.reduce(function(s,i){return s+i.total;},0);
 var units=basket.reduce(function(s,i){return s+i.qty;},0);
@@ -6969,14 +6970,14 @@ else discRow.style.display='none';
 var tdEl=document.getElementById('pos_total_due');
 if(tdEl)tdEl.textContent=N(Math.max(0,tot-posDiscount));
 posCalcChange();
-persistActiveBasket();
 }
 function posCalcChange(){
 var tot=basket.reduce(function(s,i){return s+i.total;},0);
 var due=Math.max(0,tot-posDiscount);
 var cash=Number(document.getElementById('pos_cash').value)||0;
 var transfer=Number((document.getElementById('pos_transfer')||{value:0}).value)||0;
-var paid=cash+transfer;
+var card=Number((document.getElementById('pos_card')||{value:0}).value)||0;
+var paid=cash+transfer+card;
 var change=paid-due;
 var el=document.getElementById('pos_change');
 var tdEl=document.getElementById('pos_total_due');
@@ -6984,9 +6985,11 @@ if(tdEl)tdEl.textContent=N(due);
 if(el){el.textContent=(change>=0?N(change):'Shortfall: '+N(Math.abs(change)));el.style.color=change>=0?'var(--grn)':'var(--red)';}
 // Show payment breakdown
 var bd=document.getElementById('pos_payBreakdown');
-if(bd&&(cash>0||transfer>0)){
+if(bd&&(cash>0||transfer>0||card>0)){
   bd.style.display='block';
   var pc=document.getElementById('ppb_cash');if(pc)pc.textContent=N(cash);
+  var cr=document.getElementById('ppb_crow');if(cr)cr.style.display=card>0?'flex':'none';
+  var pcd=document.getElementById('ppb_card');if(pcd)pcd.textContent=N(card);
   var tr=document.getElementById('ppb_trow');if(tr)tr.style.display=transfer>0?'flex':'none';
   var pt=document.getElementById('ppb_transfer');if(pt)pt.textContent=N(transfer);
   var ptot=document.getElementById('ppb_total');if(ptot)ptot.textContent=N(paid);
@@ -7001,11 +7004,13 @@ var custName=(document.getElementById('pos_customer')||{value:''}).value.trim();
 var custPhone=(document.getElementById('pos_cust_phone')||{value:''}).value.trim().replace(/\D/g,'');
 var cash=Number(document.getElementById('pos_cash').value)||0;
 var transfer=Number((document.getElementById('pos_transfer')||{value:0}).value)||0;
+var card=Number((document.getElementById('pos_card')||{value:0}).value)||0;
 var saleId=Date.now();
 var saleProfit=basket.reduce(function(a,i){return a+(i.profit||0);},0);
+var channelsUsed=(cash>0?1:0)+(card>0?1:0)+(transfer>0?1:0);
 var saleRecord={id:saleId,date:td(),time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),
-items:basket.slice(),total:tot,due:due,discount:posDiscount,cash:cash,transfer:transfer,
-profit:saleProfit,paymentMethod:transfer>0&&cash>0?'Mixed':transfer>0?'Transfer':'Cash',
+items:basket.slice(),total:tot,due:due,discount:posDiscount,cash:cash,card:card,transfer:transfer,
+profit:saleProfit,paymentMethod:channelsUsed>1?'Mixed':card>0?'Card':transfer>0?'Transfer':'Cash',
 hour:new Date().getHours(),note:note,customer:custName,phone:custPhone};
 if(!S.sales)S.sales=[];
 S.sales.unshift(saleRecord);
@@ -7023,7 +7028,7 @@ if(batch.qty<=0)batch.depleted=true;
 });
 // ── SPRINT 1: Revenue sync — POS is primary source, cashDays is derived ─────────
 var today=S.cashDays.find(function(d){return d.date===td();});
-var collected=cash+transfer;
+var collected=cash+transfer+card;
 if(today){
   today.sales+=due;
   today.cash+=collected;
@@ -7067,9 +7072,12 @@ basket=[];posDiscount=0;
 var discPct=document.getElementById('pos_disc_pct');var discFlat=document.getElementById('pos_disc_flat');
 if(discPct)discPct.value='';if(discFlat)discFlat.value='';
 var discRow=document.getElementById('posDiscRow');if(discRow)discRow.style.display='none';
+var custSec=document.getElementById('custSection');if(custSec)custSec.style.display='none';
+var custTgl=document.getElementById('custToggle');if(custTgl)custTgl.innerHTML='&#128100; Customer details (optional) &#9660;';
 renderBasket();renderPulse();updBadges();
 document.getElementById('pos_note').value='';document.getElementById('pos_cash').value='';
 var pt=document.getElementById('pos_transfer');if(pt)pt.value='';
+var pcd=document.getElementById('pos_card');if(pcd)pcd.value='';
 var pc=document.getElementById('pos_customer');if(pc)pc.value='';
 var pcp=document.getElementById('pos_cust_phone');if(pcp)pcp.value='';
 document.getElementById('pos_change').textContent='\u20a60'; // PCIR-028: \u20A6=₦ Naira (was \u20A8=₨ Rupee)
@@ -7093,8 +7101,11 @@ var df=document.getElementById('pos_disc_flat');if(df)df.value='';
 var dr=document.getElementById('posDiscRow');if(dr)dr.style.display='none';
 var ds=document.getElementById('discSection');if(ds)ds.style.display='none';
 var dt=document.getElementById('discToggle');if(dt)dt.innerHTML='&#127991;&#65039; Add Discount (optional) &#9660;';
+var cs=document.getElementById('custSection');if(cs)cs.style.display='none';
+var ct=document.getElementById('custToggle');if(ct)ct.innerHTML='&#128100; Customer details (optional) &#9660;';
 var pc=document.getElementById('pos_cash');if(pc)pc.value='';
 var pt=document.getElementById('pos_transfer');if(pt)pt.value='';
+var pcd=document.getElementById('pos_card');if(pcd)pcd.value='';
 var pch=document.getElementById('pos_change');if(pch)pch.textContent='\u20a60'; // PCIR-028: Unicode ₦ in textContent
 posCurrentUnit=0;posSelectedProd=null;
 var pn=document.getElementById('pos_name');if(pn)pn.value='';
