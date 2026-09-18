@@ -2173,6 +2173,10 @@ function pbsrxTargetIsNative(el){
 }
 var KEY='pbsrx_v2';
 function save(){
+  // PERF EXPERIMENT: mark the Review Workspace queue as possibly stale.
+  // S is already mutated by the caller before save() runs, regardless of
+  // whether persistence below succeeds — so this must be unconditional.
+  rwTaskListDataStale=true;
   try{
     // Strip volatile runtime cache — rebuilt on demand, should never persist
     var toSave=Object.assign({},S);
@@ -2909,6 +2913,15 @@ var rwSkipped={};        // pid → true when "Resolve Later" tapped
 var rwExpandedPid=null;  // pid of currently expanded inline panel
 var rwExpandedType=null; // task type of expanded panel
 
+// PERF EXPERIMENT: true whenever data that could change generateReviewTasks()'s
+// output (S.products/S.stock/S.sales/S.reviewLog) may have changed since
+// #rwTaskList was last built. Set by save() — the single choke point nearly
+// every state-mutating action in the app already calls — so it's a safe,
+// conservative signal: it can only cause an unnecessary extra render, never a
+// stale one. Cleared by renderReviewWorkspace() once #rwTaskList is in sync.
+// Starts true so the very first Queue entry always renders.
+var rwTaskListDataStale=true;
+
 // ── Sub-tab controller ────────────────────────────────────────────────────
 function setRwTab(tab){
   rwCurrentTab=tab;
@@ -2923,7 +2936,27 @@ function setRwTab(tab){
     }
   });
   if(tab==='dash') renderRwDashboard();
-  else if(tab==='queue'){ rwExpandedPid=null; renderReviewWorkspace(); rwRegisterQueueDelegates(); }
+  else if(tab==='queue'){
+    // PERF EXPERIMENT: entering Queue previously always called the full
+    // renderReviewWorkspace() (regenerate all tasks + rebuild the entire
+    // #rwTaskList DOM), even when nothing that could change its output had
+    // happened since it was last rendered. Skip that full rebuild when the
+    // list is already known current (see rwTaskListDataStale above) — the
+    // filter/sort/skip state can't have changed either, since every control
+    // that changes them (setRwFilter/setRwFieldFilter/setRwSort/
+    // rwResolveLater/rwSaveInline) already forces its own full render.
+    // A card left expanded from a previous visit is still collapsed, via
+    // the existing local-card-update path (rwOpenInline), not a full render.
+    var listEl=document.getElementById('rwTaskList');
+    var alreadyCurrent=!rwTaskListDataStale&&listEl&&listEl.firstElementChild;
+    if(!alreadyCurrent){
+      rwExpandedPid=null;
+      renderReviewWorkspace();
+    } else if(rwExpandedPid!==null){
+      rwOpenInline(rwExpandedPid,rwExpandedType); // collapses the open card locally
+    }
+    rwRegisterQueueDelegates();
+  }
   else if(tab==='act') renderRwActivity();
 }
 
@@ -3521,11 +3554,13 @@ function renderReviewWorkspace(){
   if(!S.products.length){
     el.innerHTML='<div style="text-align:center;color:var(--mut);padding:40px 16px;"><div style="font-size:32px;margin-bottom:8px;">&#9989;</div><div style="font-size:14px;font-weight:700;">No products yet.</div><div style="font-size:12px;margin-top:4px;">Import products to generate Review tasks.</div></div>';
     if(inlineEl)inlineEl.style.display='none';
+    rwTaskListDataStale=false;
     return;
   }
   if(!filtered.length){
     el.innerHTML='<div style="text-align:center;color:var(--grn);padding:40px 16px;"><div style="font-size:32px;margin-bottom:8px;">&#9989;</div><div style="font-size:14px;font-weight:800;">All tasks cleared!</div><div style="font-size:12px;color:var(--mut);margin-top:4px;">These fields are all populated. Great work.</div></div>';
     if(inlineEl)inlineEl.style.display='none';
+    rwTaskListDataStale=false;
     return;
   }
 
@@ -3561,6 +3596,7 @@ function renderReviewWorkspace(){
 
   el.innerHTML=html;
   if(inlineEl)inlineEl.style.display='none'; // inline panel is now embedded in cards
+  rwTaskListDataStale=false;
 }
 
 // ── Single task-card HTML builder (shared by full render and the local ─────
