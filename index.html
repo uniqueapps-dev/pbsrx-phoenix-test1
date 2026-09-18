@@ -3269,49 +3269,52 @@ function generateReviewTasks(){
     var isControlled=cat.toLowerCase().includes('controlled')||cat.toLowerCase().includes('antibiotic')||cat.toLowerCase().includes('antimalarial');
     var isPharm=isControlled||cat.toLowerCase().includes('analgesic')||cat.toLowerCase().includes('gi ')||cat.toLowerCase().includes('eye care')||cat.toLowerCase().includes("women's");
     var nameKey=(p.genericName||'').toLowerCase().trim();
+    // Computed once per product and reused below — same value, was previously
+    // recomputed on every task pushed for this product (up to 17x each).
+    var score=computeCompleteness(p);
 
     // ── PRIORITY 1 ──────────────────────────────────────────────────────────
     if(!p.sellPrice||p.sellPrice===0){
       tasks.push({pid:id,pri:1,type:'sell_price',icon:'&#8358;',
         title:name,desc:'No selling price \u2014 this product will sell at \u20a60',
-        hasSales:hasSales,score:computeCompleteness(p)});
+        hasSales:hasSales,score:score});
     }
     if(p.sellPrice>0&&p.costPrice>0&&p.sellPrice<p.costPrice){
       tasks.push({pid:id,pri:1,type:'price_inversion',icon:'&#9888;&#65039;',
         title:name,desc:'Sell \u20a6'+(p.sellPrice||0).toLocaleString('en-NG')+' is below cost \u20a6'+(p.costPrice||0).toLocaleString('en-NG')+' \u2014 negative margin',
-        hasSales:hasSales,score:computeCompleteness(p)});
+        hasSales:hasSales,score:score});
     }
     if((!p.costPrice||p.costPrice===0)&&hasSales){
       tasks.push({pid:id,pri:1,type:'cost_price',icon:'&#128179;',
         title:name,desc:'No cost price \u2014 margin tracking unavailable (has sales)',
-        hasSales:hasSales,score:computeCompleteness(p)});
+        hasSales:hasSales,score:score});
     }
     if(!p.isFastMover&&hasSales){
       tasks.push({pid:id,pri:1,type:'fast_mover',icon:'&#128138;',
         title:name,desc:'Not monitored in Stock Pulse \u2014 but this product has been sold',
-        hasSales:hasSales,score:computeCompleteness(p)});
+        hasSales:hasSales,score:score});
     }
     if((p.notes||'').indexOf('[PID:REVIEW]')>=0){
       tasks.push({pid:id,pri:1,type:'ownership',icon:'&#10067;',
         title:name,desc:'Ownership unconfirmed (Owner or Consignment) \u2014 verify before sale',
-        hasSales:hasSales,score:computeCompleteness(p)});
+        hasSales:hasSales,score:score});
     }
     if(nameCounts[nameKey]>1){
       tasks.push({pid:id,pri:1,type:'duplicate_name',icon:'&#128258;',
         title:name,desc:'Duplicate product name detected \u2014 review and remove the duplicate',
-        hasSales:hasSales,score:computeCompleteness(p)});
+        hasSales:hasSales,score:score});
     }
 
     // ── PRIORITY 2 ──────────────────────────────────────────────────────────
     if(!p.sellUnit||p.sellUnit==='unit'||p.sellUnit==='Unit'){
       tasks.push({pid:id,pri:2,type:'sell_unit',icon:'&#128230;',
         title:name,desc:'Sell unit is generic \u2014 set to Tablet, Bottle, Pack, Card, etc.',
-        hasSales:hasSales,score:computeCompleteness(p)});
+        hasSales:hasSales,score:score});
     }
     if(p.isFastMover&&(!p.minStock||p.minStock===10)){
       tasks.push({pid:id,pri:2,type:'reorder_level',icon:'&#128308;',
         title:name,desc:'Using default minimum stock of 10 \u2014 set the real reorder point',
-        hasSales:hasSales,score:computeCompleteness(p)});
+        hasSales:hasSales,score:score});
     }
     if(isControlled){
       var batches=(S.stock||[]).filter(function(b){return b.productId===id&&!b.depleted;});
@@ -3319,7 +3322,7 @@ function generateReviewTasks(){
       if(!hasExpiry&&batches.length>0){
         tasks.push({pid:id,pri:2,type:'expiry',icon:'&#128337;',
           title:name,desc:'No expiry date recorded \u2014 required for '+cat+' products',
-          hasSales:hasSales,score:computeCompleteness(p)});
+          hasSales:hasSales,score:score});
       }
     }
 
@@ -3327,49 +3330,49 @@ function generateReviewTasks(){
     if(!p.category||p.category==='General'||p.category==='Other'){
       tasks.push({pid:id,pri:3,type:'category',icon:'&#127991;',
         title:name,desc:'Category is \u201c'+(p.category||'none')+'\u201d \u2014 assign a specific category',
-        hasSales:hasSales,score:computeCompleteness(p)});
+        hasSales:hasSales,score:score});
     }
     if(!p.costPrice||p.costPrice===0){
       tasks.push({pid:id,pri:3,type:'cost_price_ns',icon:'&#128181;',
         title:name,desc:'No cost price \u2014 set when product is next received',
-        hasSales:hasSales,score:computeCompleteness(p)});
+        hasSales:hasSales,score:score});
     }
     if(p.isFastMover&&(!p.reorderQty||p.reorderQty===0)){
       tasks.push({pid:id,pri:3,type:'reorder_qty',icon:'&#128338;',
         title:name,desc:'No reorder quantity \u2014 Reorder Brain cannot generate order amounts',
-        hasSales:hasSales,score:computeCompleteness(p)});
+        hasSales:hasSales,score:score});
     }
     if(isPharm&&!p.strength){
       tasks.push({pid:id,pri:3,type:'strength',icon:'&#128138;',
         title:name,desc:'No strength recorded \u2014 add dosage (e.g. 500mg, 125mg/5ml)',
-        hasSales:hasSales,score:computeCompleteness(p)});
+        hasSales:hasSales,score:score});
     }
     if(isPharm&&!p.form){
       tasks.push({pid:id,pri:3,type:'form',icon:'&#128137;',
         title:name,desc:'No dosage form \u2014 add form (e.g. Tablet, Suspension, Injection)',
-        hasSales:hasSales,score:computeCompleteness(p)});
+        hasSales:hasSales,score:score});
     }
 
     // ── PRIORITY 4 ──────────────────────────────────────────────────────────
     if(!p.barcode){
       tasks.push({pid:id,pri:4,type:'barcode',icon:'&#128211;',
         title:name,desc:'No barcode \u2014 capture via AI Snap during next intake',
-        hasSales:hasSales,score:computeCompleteness(p)});
+        hasSales:hasSales,score:score});
     }
     if(!p.nafdac){
       tasks.push({pid:id,pri:4,type:'nafdac',icon:'&#128196;',
         title:name,desc:'No NAFDAC number \u2014 capture via AI Snap during next intake',
-        hasSales:hasSales,score:computeCompleteness(p)});
+        hasSales:hasSales,score:score});
     }
     if(!(p.supplier||p.primarySupplier)){
       tasks.push({pid:id,pri:4,type:'supplier',icon:'&#127981;',
         title:name,desc:'No supplier linked \u2014 will be set on next Bulk Receive',
-        hasSales:hasSales,score:computeCompleteness(p)});
+        hasSales:hasSales,score:score});
     }
     if(!p.shelfLocation){
       tasks.push({pid:id,pri:4,type:'shelf',icon:'&#128205;',
         title:name,desc:'No shelf location recorded \u2014 enter physical shelf zone',
-        hasSales:hasSales,score:computeCompleteness(p)});
+        hasSales:hasSales,score:score});
     }
   });
 
@@ -3381,10 +3384,12 @@ function renderReviewWorkspace(){
   var qPanel=document.getElementById('rwQueuePanel');
   if(!qPanel)return;
 
-  var tasks=generateReviewTasks();
+  // Generated once and reused below for both the visible list and the summary
+  // strip — previously generated twice per render.
+  var allTasks=generateReviewTasks();
 
   // Apply Resolve Later skips (skip list resets when page is navigated away)
-  tasks=tasks.filter(function(t){return !rwSkipped[t.pid+'_'+t.type];});
+  var tasks=allTasks.filter(function(t){return !rwSkipped[t.pid+'_'+t.type];});
 
   // Apply priority filter (preserved)
   var filtered=rwCurrentFilter==='all'?tasks:tasks.filter(function(t){return String(t.pri)===rwCurrentFilter;});
@@ -3436,8 +3441,7 @@ function renderReviewWorkspace(){
     });
   }
 
-  // Summary strip (preserved)
-  var allTasks=generateReviewTasks();
+  // Summary strip (preserved) — reuses allTasks generated above
   var counts={1:0,2:0,3:0,4:0};
   allTasks.forEach(function(t){counts[t.pri]=(counts[t.pri]||0)+1;});
   var sumEl=document.getElementById('rwSummary');
@@ -3485,13 +3489,24 @@ function renderReviewWorkspace(){
     if(expandedIdx<0){rwExpandedPid=null;rwExpandedType=null;}
   }
 
+  // Built once for O(1) lookups inside the loop below — previously a linear
+  // S.products.find() and a linear filtered.filter() ran for every row,
+  // making this O(n²) in the number of visible tasks.
+  var prodMap={};
+  S.products.forEach(function(p){prodMap[p.id]=p;});
+  var tasksByPid={};
+  filtered.forEach(function(x){
+    if(!tasksByPid[x.pid])tasksByPid[x.pid]=[];
+    tasksByPid[x.pid].push(x);
+  });
+
   filtered.forEach(function(t,idx){
-    var prod=S.products.find(function(p){return p.id===t.pid;});
-    var score=prod?computeCompleteness(prod):0;
+    var prod=prodMap[t.pid];
+    var score=prod?t.score:0;
     var scoreColor=score>=80?'var(--grn)':score>=50?'var(--ora)':'var(--red)';
     var barPct=score;
     var isExpanded=(t.pid===rwExpandedPid&&t.type===rwExpandedType);
-    var allTasksForPid=filtered.filter(function(x){return x.pid===t.pid;});
+    var allTasksForPid=tasksByPid[t.pid]||[];
     var otherCount=allTasksForPid.length-1;
 
     html+='<div data-rwtap="1" data-pid="'+t.pid+'" data-type="'+t.type+'" style="background:'+priBg[t.pri]+';border:1px solid '+(isExpanded?'var(--amb)':'var(--bdr)')+';border-radius:12px;padding:12px 14px;margin-bottom:6px;cursor:pointer;touch-action:manipulation;user-select:none;">'+'<div class="rw-card-header" style="display:flex;align-items:center;gap:10px;">'+
@@ -7080,6 +7095,10 @@ var pt=document.getElementById('pos_transfer');if(pt)pt.value='';
 var pcd=document.getElementById('pos_card');if(pcd)pcd.value='';
 var pc=document.getElementById('pos_customer');if(pc)pc.value='';
 var pcp=document.getElementById('pos_cust_phone');if(pcp)pcp.value='';
+// Payment amount fields are cleared above, but the breakdown block itself
+// (pos_payBreakdown) is only ever written by posCalcChange() — without this
+// call it stays visible showing the completed sale's numbers (PBSRX-B2-A4).
+posCalcChange();
 document.getElementById('pos_change').textContent='\u20a60'; // PCIR-028: \u20A6=₦ Naira (was \u20A8=₨ Rupee)
 // Reset search and step 2
 var pn=document.getElementById('pos_name');if(pn)pn.value='';
@@ -7101,11 +7120,20 @@ var df=document.getElementById('pos_disc_flat');if(df)df.value='';
 var dr=document.getElementById('posDiscRow');if(dr)dr.style.display='none';
 var ds=document.getElementById('discSection');if(ds)ds.style.display='none';
 var dt=document.getElementById('discToggle');if(dt)dt.innerHTML='&#127991;&#65039; Add Discount (optional) &#9660;';
+// Batch 1: collapse the customer-details section (custSection/custToggle).
 var cs=document.getElementById('custSection');if(cs)cs.style.display='none';
 var ct=document.getElementById('custToggle');if(ct)ct.innerHTML='&#128100; Customer details (optional) &#9660;';
+// Batch 2 (PBSRX-B2-A4): customer field VALUES were not previously cleared
+// here — Clear All is a transaction boundary the same as Confirm Sale, so it
+// should leave the next sale with no leftover customer info, matching
+// posConfirmSale(). Extended here to also cover the Batch 1 collapse state
+// above and the Batch 1 pos_card field below (integration-time addition).
+var pcst=document.getElementById('pos_customer');if(pcst)pcst.value='';
+var pcph=document.getElementById('pos_cust_phone');if(pcph)pcph.value='';
 var pc=document.getElementById('pos_cash');if(pc)pc.value='';
 var pt=document.getElementById('pos_transfer');if(pt)pt.value='';
 var pcd=document.getElementById('pos_card');if(pcd)pcd.value='';
+posCalcChange(); // clears the stale payment-breakdown display (PBSRX-B2-A4)
 var pch=document.getElementById('pos_change');if(pch)pch.textContent='\u20a60'; // PCIR-028: Unicode ₦ in textContent
 posCurrentUnit=0;posSelectedProd=null;
 var pn=document.getElementById('pos_name');if(pn)pn.value='';
@@ -8521,7 +8549,27 @@ if(!basket.length){toast('Nothing in basket to hold');return;}
 var label='Basket '+(heldBaskets.length+1)+' — '+basket.length+' items — '+N(basket.reduce(function(s,i){return s+i.total;},0));
 heldBaskets.push({label:label,basket:basket.slice(),discount:posDiscount,time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})});
 basket=[];posDiscount=0;
+// Hold starts a fresh sale — clear customer, discount, and payment state so
+// none of it leaks into the next transaction (PBSRX-B2-A4). Only basket
+// items + discount are captured above; nothing here was previously reset.
+var dp=document.getElementById('pos_disc_pct');if(dp)dp.value='';
+var df=document.getElementById('pos_disc_flat');if(df)df.value='';
+var dr=document.getElementById('posDiscRow');if(dr)dr.style.display='none';
+var ds=document.getElementById('discSection');if(ds)ds.style.display='none';
+var dt=document.getElementById('discToggle');if(dt)dt.innerHTML='&#127991;&#65039; Add Discount (optional) &#9660;';
+// Batch 1 integration: collapse the customer-details section and clear the
+// Card/POS field too — holdBasket() was never modified by Batch 1 itself, so
+// these were missing from the merge until added here (verified during
+// Batch1+Batch2 integration).
+var cs=document.getElementById('custSection');if(cs)cs.style.display='none';
+var ct=document.getElementById('custToggle');if(ct)ct.innerHTML='&#128100; Customer details (optional) &#9660;';
+var pcst=document.getElementById('pos_customer');if(pcst)pcst.value='';
+var pcph=document.getElementById('pos_cust_phone');if(pcph)pcph.value='';
+var pca=document.getElementById('pos_cash');if(pca)pca.value='';
+var pt=document.getElementById('pos_transfer');if(pt)pt.value='';
+var pcd=document.getElementById('pos_card');if(pcd)pcd.value='';
 renderBasket();renderHeldBaskets();
+posCalcChange(); // clears the stale payment-breakdown display (PBSRX-B2-A4)
 try{localStorage.setItem('pbsrx_held_baskets',JSON.stringify(heldBaskets));}catch(e){} // PCIR-019
 toast('Basket held. Start new sale.',2000);
 }
@@ -8541,7 +8589,34 @@ function resumeBasket(i){
 if(basket.length&&!confirm('Replace current basket with held basket?'))return;
 var h=heldBaskets.splice(i,1)[0];
 basket=h.basket;posDiscount=h.discount||0;
+// Only basket items + discount belong to the held transaction (that's all
+// holdBasket() ever captured) — customer and payment fields are reset so
+// nothing from whatever was previously in them carries over (PBSRX-B2-A4).
+var pcst=document.getElementById('pos_customer');if(pcst)pcst.value='';
+var pcph=document.getElementById('pos_cust_phone');if(pcph)pcph.value='';
+var pca=document.getElementById('pos_cash');if(pca)pca.value='';
+var pt=document.getElementById('pos_transfer');if(pt)pt.value='';
+// Batch 1 integration: pos_card and the customer-collapse state weren't
+// captured by holdBasket() either, so there's nothing held to restore here —
+// reset them the same way, rather than leaving whatever was in them before
+// resuming (verified during Batch1+Batch2 integration).
+var pcd=document.getElementById('pos_card');if(pcd)pcd.value='';
+var cs=document.getElementById('custSection');if(cs)cs.style.display='none';
+var ct=document.getElementById('custToggle');if(ct)ct.innerHTML='&#128100; Customer details (optional) &#9660;';
+// The % vs flat entry method isn't stored, only the resulting discount
+// amount — clear both input fields and show it via the same banner
+// posApplyDiscount() already uses, rather than guessing an input value.
+var dp=document.getElementById('pos_disc_pct');if(dp)dp.value='';
+var df=document.getElementById('pos_disc_flat');if(df)df.value='';
 renderBasket();renderHeldBaskets();
+var tot=basket.reduce(function(s,it){return s+it.total;},0);
+var dr=document.getElementById('posDiscRow');
+if(posDiscount>0){
+  var ds=document.getElementById('discSection');if(ds)ds.style.display='block';
+  var dt=document.getElementById('discToggle');if(dt)dt.innerHTML='&#127991;&#65039; Discount &#9650;';
+  if(dr){dr.style.display='block';dr.textContent='Discount applied: -'+N(posDiscount)+' | New total: '+N(Math.max(0,tot-posDiscount));}
+} else if(dr){dr.style.display='none';}
+posCalcChange();
 try{localStorage.setItem('pbsrx_held_baskets',JSON.stringify(heldBaskets));}catch(e){} // PCIR-019
 toast('Basket resumed',1500);
 }
