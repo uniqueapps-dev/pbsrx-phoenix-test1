@@ -3977,6 +3977,14 @@ function rw2GetNextCase(excludePid){
 var rw2CurrentPid=null;
 var rw2PreviousStack=[]; // simple LIFO for "Previous" — small, bounded, session-only, not history/undo state
 
+// PHASE 3A.1: accordion state — which single finding (by finding.id) is
+// currently expanded on the CURRENT product's screen. rw2CaseScreenForPid
+// records which product this expansion state belongs to, so a genuine
+// product transition (Next/Previous) can reset it, while a same-product
+// re-render (after Save/Defer) can preserve it. Session-only, not persisted.
+var rw2ExpandedFindingId=null;
+var rw2CaseScreenForPid=undefined;
+
 // Presentation-only grouping of the Phase 1/2 V2 categories into the four
 // display buckets from the Phase 3A spec (Critical / Operational / Data
 // Cleanup / Special). Reuses the exact category values already
@@ -4008,6 +4016,7 @@ function rw2ShowCase(pid){
   goToNoHistory(12);
   rw2RegisterCaseDelegates();
   rw2RenderCaseScreen();
+  rw2ResetCaseViewport();
 }
 
 function rw2ExitCaseScreen(){
@@ -4016,17 +4025,42 @@ function rw2ExitCaseScreen(){
 }
 
 // ── Navigation ────────────────────────────────────────────────────────────
+// PHASE 3A.1: both functions now end with rw2ResetCaseViewport() — see that
+// function for why (investigation found the nav state machine itself was
+// already correct; the reported "Previous not responding" symptom traces to
+// the Prev/Next buttons landing outside the reachable viewport — behind the
+// on-screen keyboard, or below a leftover scroll position from the product
+// just left — after a product transition, not to a logic defect).
 function rw2GoNext(){
   var next=rw2GetNextCase(rw2CurrentPid);
   if(rw2CurrentPid!=null)rw2PreviousStack.push(rw2CurrentPid);
   rw2CurrentPid=next?next.productId:null;
   rw2RenderCaseScreen();
+  rw2ResetCaseViewport();
 }
 
 function rw2GoPrevious(){
   if(!rw2PreviousStack.length)return;
   rw2CurrentPid=rw2PreviousStack.pop();
   rw2RenderCaseScreen();
+  rw2ResetCaseViewport();
+}
+
+// Blurs any focused input inside #pg12 (so the on-screen keyboard, if open,
+// closes and stops covering the nav buttons) and scrolls #pg12 back to the
+// top. Scoped to the V2 case container only — does not touch any other
+// page's scroll position or the global nav. Deliberately NOT called from
+// rw2RenderCaseScreen() itself, since that function also re-renders after
+// same-product Save/Defer, where resetting scroll would fight the user
+// mid-edit; it is called only from the three places that change WHICH
+// product is showing (initial entry, Next, Previous).
+function rw2ResetCaseViewport(){
+  var panel=document.getElementById('pg12');
+  if(!panel)return;
+  if(document.activeElement&&panel.contains(document.activeElement)&&typeof document.activeElement.blur==='function'){
+    document.activeElement.blur();
+  }
+  panel.scrollTop=0;
 }
 
 // ── Core render ───────────────────────────────────────────────────────────
@@ -4047,6 +4081,8 @@ function rw2RenderCaseScreen(){
   var product=pid!=null?S.products.find(function(p){return String(p.id)===String(pid);}):null;
 
   if(!product){
+    rw2CaseScreenForPid=pid;
+    rw2ExpandedFindingId=null;
     subEl.textContent='All done';
     headerEl.innerHTML='';
     findingsEl.innerHTML='';
@@ -4059,6 +4095,20 @@ function rw2RenderCaseScreen(){
   var reviewCase=rw2GetCase(pid);
   var findings=reviewCase?reviewCase.findings:[];
   var status=reviewCase?reviewCase.status:RW2_STATUS.RESOLVED;
+
+  // PHASE 3A.1: accordion state is keyed to the product it belongs to. A
+  // genuine product transition (pid changed since the last render) resets
+  // it to a fresh default; a same-product re-render (Save/Defer) preserves
+  // whichever finding was expanded, UNLESS that exact finding no longer
+  // exists in the recomputed list (e.g. it was just resolved), in which
+  // case the same default policy picks a fresh one rather than leaving the
+  // user looking at nothing.
+  if(rw2CaseScreenForPid!==pid){
+    rw2CaseScreenForPid=pid;
+    rw2ExpandedFindingId=rw2ComputeDefaultExpandedFindingId(findings);
+  } else if(rw2ExpandedFindingId!=null&&!findings.some(function(f){return f.id===rw2ExpandedFindingId;})){
+    rw2ExpandedFindingId=rw2ComputeDefaultExpandedFindingId(findings);
+  }
 
   subEl.textContent=product.genericName+(product.strength?' '+product.strength:'');
   headerEl.innerHTML=rw2BuildProductHeaderHtml(product,status);
@@ -4146,12 +4196,32 @@ function rw2BuildFindingsSectionsHtml(findings){
   return html;
 }
 
+// PHASE 3A.1: picks the finding that should start expanded on a fresh
+// render of a product's screen — the first ACTIONABLE, non-deferred
+// finding in the same top-to-bottom order the sections actually render in
+// (walks RW2_UI_GROUPS the same way rw2BuildFindingsSectionsHtml does), or
+// null (all collapsed) if none are actionable. Only actionable findings
+// carry an editor to show/hide, so read-only/special/deferred tiles never
+// participate in the accordion — they always render in their single,
+// already-minimal state.
+function rw2ComputeDefaultExpandedFindingId(findings){
+  for(var g=0;g<RW2_UI_GROUPS.length;g++){
+    var cats=RW2_UI_GROUPS[g].categories;
+    for(var i=0;i<findings.length;i++){
+      var f=findings[i];
+      if(cats.indexOf(f.category)<0)continue;
+      if(f.actionable&&!rwSkipped[f.deferKey])return f.id;
+    }
+  }
+  return null;
+}
+
 function rw2BuildFindingsGroupHtml(label,findings,readOnly,color){
   color=color||'var(--mut)';
   var html='<div style="margin-bottom:16px;">'+
     '<div style="font-size:11px;font-weight:800;color:'+color+';letter-spacing:0.5px;margin-bottom:8px;text-transform:uppercase;">'+escH(label)+'</div>';
   findings.forEach(function(f){
-    html+=rw2BuildFindingCardHtml(f,readOnly);
+    html+=rw2BuildFindingCardHtml(f,readOnly,f.id===rw2ExpandedFindingId);
   });
   html+='</div>';
   return html;
@@ -4167,40 +4237,98 @@ function rw2LegacyTypeOf(finding){
   return finding.id.indexOf('::missing_cost_price')>=0?'cost_price_ns':finding.id.split('::')[1];
 }
 
-function rw2BuildFindingCardHtml(finding,readOnly){
+// PHASE 3A.1: every finding tile is wrapped in a stable
+// data-findingid="<finding.id>" container so a later local toggle
+// (rw2ToggleFinding/rw2PatchFindingTile) can find and patch ONE tile's
+// innerHTML directly, without touching any sibling tile or re-running this
+// whole builder. Only the actionable/non-deferred branch is a real
+// accordion tile (rw2BuildFindingTileInnerHtml); deferred and read-only/
+// non-actionable tiles have no editor to hide, so they always render their
+// single, already-minimal state and never register as the expanded id.
+function rw2BuildFindingCardHtml(finding,readOnly,expanded){
   var legacyType=rw2LegacyTypeOf(finding);
   var deferKey=finding.deferKey;
   var deferred=!!rwSkipped[deferKey];
   var cardStyle='background:var(--surf);border:1px solid var(--bdr);border-radius:12px;padding:12px 14px;margin-bottom:8px;';
 
-  var body='<div style="font-size:13px;font-weight:700;color:var(--txt);">'+escH(finding.description)+'</div>';
-
   if(deferred){
+    var body='<div style="font-size:13px;font-weight:700;color:var(--txt);">'+escH(finding.description)+'</div>';
     body+='<div style="font-size:11px;color:var(--mut);margin-top:6px;">&#128336; Deferred this session</div>';
-    return '<div style="'+cardStyle+'opacity:0.6;">'+body+'</div>';
+    return '<div data-findingid="'+finding.id+'" style="'+cardStyle+'opacity:0.6;">'+body+'</div>';
   }
 
   if(readOnly||!finding.actionable){
     // duplicate_name / expiry — no editor invented, no destructive action.
+    var body='<div style="font-size:13px;font-weight:700;color:var(--txt);">'+escH(finding.description)+'</div>';
     var note=finding.category===RW2_CATEGORY.SPECIAL_REVIEW
       ?'Requires manual review — not editable from this screen. Use Edit Full Product for full context.'
       :'Not editable from this screen.';
     body+='<div style="font-size:11px;color:var(--mut);margin-top:6px;line-height:1.5;">'+note+'</div>'+
       '<button data-rwaction="editfull" data-rwpid="'+finding.productId+'" style="margin-top:8px;font-size:10px;font-weight:700;background:none;border:1px solid var(--bdr);color:var(--mut);border-radius:8px;padding:6px 10px;cursor:pointer;touch-action:manipulation;">Edit Full Product &#8599;</button>';
-    return '<div style="'+cardStyle+'">'+body+'</div>';
+    return '<div data-findingid="'+finding.id+'" style="'+cardStyle+'">'+body+'</div>';
   }
 
-  // Actionable: reuse the SAME editor markup + data-rwaction attributes
-  // the legacy inline panel uses (rwBuildFieldEditorHtml() extracted
-  // above) — handled here by rw2RegisterCaseDelegates(), scoped to #pg12,
-  // not by the legacy #rwQueuePanel delegates.
+  // Actionable, not deferred: accordion tile (collapsed or expanded).
+  return '<div data-findingid="'+finding.id+'" style="'+cardStyle+'">'+
+    rw2BuildFindingTileInnerHtml(finding,legacyType,expanded)+
+  '</div>';
+}
+
+// The INNER content of one accordion tile — shared by the full render path
+// above and the local toggle patch below, so collapse/expand never
+// duplicates the editor-building logic. Collapsed: chevron + description
+// only, no editor controls. Expanded: same header (now tappable to
+// collapse) plus the SAME rwBuildFieldEditorHtml() editor + Resolve Later
+// button the legacy inline panel uses.
+function rw2BuildFindingTileInnerHtml(finding,legacyType,expanded){
+  var headerHtml='<div data-rwaction="togglefinding" data-findingid="'+finding.id+'" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;touch-action:manipulation;">'+
+    '<span style="flex-shrink:0;font-size:11px;color:var(--mut);margin-top:2px;">'+(expanded?'&#9660;':'&#9654;')+'</span>'+
+    '<span style="font-size:13px;font-weight:700;color:var(--txt);">'+escH(finding.description)+'</span>'+
+  '</div>';
+
+  if(!expanded)return headerHtml;
+
   var product=S.products.find(function(p){return String(p.id)===String(finding.productId);});
   var editorHtml=product?rwBuildFieldEditorHtml(product,legacyType):'';
 
-  body+='<div style="margin-top:10px;">'+editorHtml+'</div>'+
+  return headerHtml+
+    '<div style="margin-top:10px;">'+editorHtml+'</div>'+
     '<button data-rwaction="resolvelater" data-rwpid="'+finding.productId+'" data-rwtype="'+legacyType+'" style="width:100%;margin-top:8px;padding:9px;background:none;border:1px solid var(--bdr);color:var(--mut);border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;touch-action:manipulation;">&#128336; Resolve Later</button>';
+}
 
-  return '<div style="'+cardStyle+'">'+body+'</div>';
+// PHASE 3A.1: toggling a tile is a LOCAL DOM patch — at most two
+// [data-findingid] nodes' innerHTML are replaced (the newly expanded one
+// and, if a different tile was previously open, that one collapsed back
+// down). Never calls rw2RenderCaseScreen(); never rebuilds the findings
+// section, the legacy Review Workspace, or the catalog. Enforces single
+// expansion: opening a new tile always collapses whichever one was open.
+function rw2ToggleFinding(findingId){
+  var reviewCase=rw2GetCase(rw2CurrentPid);
+  if(!reviewCase)return;
+  var panel=document.getElementById('pg12');
+  if(!panel)return;
+
+  var oldExpandedId=rw2ExpandedFindingId;
+  var newExpandedId=(oldExpandedId===findingId)?null:findingId;
+  rw2ExpandedFindingId=newExpandedId;
+
+  if(oldExpandedId!=null&&oldExpandedId!==newExpandedId){
+    rw2PatchFindingTile(panel,reviewCase,oldExpandedId,false);
+  }
+  if(newExpandedId!=null){
+    rw2PatchFindingTile(panel,reviewCase,newExpandedId,true);
+  }
+}
+
+function rw2PatchFindingTile(panel,reviewCase,findingId,expanded){
+  var node=panel.querySelector('[data-findingid="'+findingId+'"]');
+  if(!node)return;
+  var f=null;
+  for(var i=0;i<reviewCase.findings.length;i++){
+    if(reviewCase.findings[i].id===findingId){f=reviewCase.findings[i];break;}
+  }
+  if(!f)return;
+  node.innerHTML=rw2BuildFindingTileInnerHtml(f,rw2LegacyTypeOf(f),expanded);
 }
 
 // ── Save / defer handlers ─────────────────────────────────────────────────
@@ -4282,6 +4410,10 @@ function rw2HandleFieldAction(el,panel){
   }
   if(action==='editfull'){
     openProdEdit(pid);
+    return;
+  }
+  if(action==='togglefinding'){
+    rw2ToggleFinding(el.dataset.findingid);
     return;
   }
 
