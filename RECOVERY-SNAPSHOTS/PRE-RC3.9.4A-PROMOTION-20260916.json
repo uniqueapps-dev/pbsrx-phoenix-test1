@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-09-16T03:45:00Z",
+  "description": "Pre-RC3.9.4A promotion snapshot",
+  "head": "907f689",
+  "artifacts": {
+    "index.html": "af1660a30f5fb9e6db52e3912fbacae1c465b428048d6002da730ca3e2398046",
+    "manifest.json": "1a4d295dd3fcdde5b543499139a7aaff4e7bd2cf51b61b4c7d45ca7e954768ea",
+    "sw.js": "9c9c4ca23bc641014e779ec59d5392a1aecad91e1bd63b18b38f03d2992cab16",
+    "icons/icon-192.png": "e775526abea026939c0cef426b6ad8e8885e6f301a8c9df3697ec1de56e40929",
+    "icons/icon-512.png": "369d9677be3dfd0270ac8b20a32b2e00e76ccccf3ecd2681c72711c82ae16353"
+  }
+}
