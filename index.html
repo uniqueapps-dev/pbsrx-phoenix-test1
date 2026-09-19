@@ -1928,57 +1928,16 @@ body{background:var(--bg);}
 
 </div><!-- end pg10 -->
 
-<!-- ════════════════════════════════════════════ pg11: REVIEW WORKSPACE RC3 ═══ -->
+<!-- ════════════════════════════════════════════ pg11: REVIEW WORKSPACE V2 ═══ -->
+<!-- PHASE 3C.3: legacy Dashboard/Queue/Activity sub-tabs, task cards,
+     filters, sort, and inline workflow have been retired. V2's opening
+     panel is now the only content of this page — see rw2RenderOpeningPanel()
+     (Phase 3B), which reads only the Phase 2 case cache; it never generates
+     a legacy task-card DOM. -->
 <div class="pg" id="pg11">
 <div class="pgt">&#9889; Review Workspace</div>
 <div class="pgs" id="rwPgs">Product Data Quality Centre</div>
-<!-- RC3: Sub-tab bar (PHASE 3B: v2open added as the default/leftmost tab —
-     the new product-centric opening experience. Dashboard/Queue/Activity
-     remain fully intact, one tap away, as the migration fallback.) -->
-<div style="display:flex;gap:6px;margin-bottom:12px;">
-<button class="bsm bsb" id="rwtab_v2open" onclick="setRwTab('v2open')">&#9889; Review</button>
-<button class="bsm" id="rwtab_dash" onclick="setRwTab('dash')" style="background:none;border:1px solid var(--bdr);color:var(--mut);">&#128202; Dashboard</button>
-<button class="bsm" id="rwtab_queue" onclick="setRwTab('queue')" style="background:none;border:1px solid var(--bdr);color:var(--mut);">&#9999;&#65039; Queue</button>
-<button class="bsm" id="rwtab_act" onclick="setRwTab('act')" style="background:none;border:1px solid var(--bdr);color:var(--mut);">&#128203; Activity</button>
-</div>
-<!-- V2 Opening panel (PHASE 3B) — populated exclusively by rw2RenderOpeningPanel()
-     using the Phase 2 case cache; never generates the legacy task-card DOM. -->
 <div id="rw2OpenPanel"><div id="rw2OpenContent"></div></div>
-<!-- Dashboard panel -->
-<div id="rwDashPanel" style="display:none;"><div id="rwDashContent"></div></div>
-<!-- Queue panel -->
-<div id="rwQueuePanel" style="display:none;">
-<div id="rwSummary" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;"></div>
-<div id="rwFilters" style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
-<button class="bsm bsb" id="rwf_all" onclick="setRwFilter('all',this)">All</button>
-<button class="bsm" id="rwf_p1" onclick="setRwFilter('1',this)" style="background:var(--red2);color:var(--red);border:1px solid var(--red);">&#128308; Priority 1</button>
-<button class="bsm" id="rwf_p2" onclick="setRwFilter('2',this)" style="background:none;border:1px solid var(--bdr);color:var(--mut);">&#128992; Priority 2</button>
-<button class="bsm" id="rwf_p3" onclick="setRwFilter('3',this)" style="background:none;border:1px solid var(--bdr);color:var(--mut);">&#128309; Priority 3</button>
-<button class="bsm" id="rwf_p4" onclick="setRwFilter('4',this)" style="background:none;border:1px solid var(--bdr);color:var(--mut);">&#9898; Priority 4</button>
-</div>
-<div id="rwFieldFilters" style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap;">
-<button class="bsm" id="rwff_all" onclick="setRwFieldFilter('all',this)" style="font-size:10px;padding:5px 9px;background:var(--blu3);color:var(--blu);border:none;">&#128269; All</button>
-<button class="bsm" id="rwff_price" onclick="setRwFieldFilter('price',this)" style="font-size:10px;padding:5px 9px;background:var(--surf);border:1px solid var(--bdr);color:var(--mut);">&#8358; Price</button>
-<button class="bsm" id="rwff_shelf" onclick="setRwFieldFilter('shelf',this)" style="font-size:10px;padding:5px 9px;background:var(--surf);border:1px solid var(--bdr);color:var(--mut);">&#128205; Shelf</button>
-<button class="bsm" id="rwff_supplier" onclick="setRwFieldFilter('supplier',this)" style="font-size:10px;padding:5px 9px;background:var(--surf);border:1px solid var(--bdr);color:var(--mut);">&#127981; Supplier</button>
-<button class="bsm" id="rwff_cat" onclick="setRwFieldFilter('cat',this)" style="font-size:10px;padding:5px 9px;background:var(--surf);border:1px solid var(--bdr);color:var(--mut);">&#127991; Category</button>
-<button class="bsm" id="rwff_dup" onclick="setRwFieldFilter('dup',this)" style="font-size:10px;padding:5px 9px;background:var(--surf);border:1px solid var(--bdr);color:var(--mut);">&#128258; Dupes</button>
-<button class="bsm" id="rwff_owner" onclick="setRwFieldFilter('owner',this)" style="font-size:10px;padding:5px 9px;background:var(--surf);border:1px solid var(--bdr);color:var(--mut);">O Owner</button>
-<button class="bsm" id="rwff_cons" onclick="setRwFieldFilter('cons',this)" style="font-size:10px;padding:5px 9px;background:var(--surf);border:1px solid var(--bdr);color:var(--mut);">C Consign</button>
-</div>
-<div style="display:flex;align-items:center;gap:5px;margin-bottom:10px;">
-<span style="font-size:10px;color:var(--mut);font-weight:700;">SORT:</span>
-<button class="bsm" id="rwsort_pri" onclick="setRwSort('pri',this)" style="font-size:10px;padding:4px 8px;background:var(--blu3);color:var(--blu);border:none;">Priority</button>
-<button class="bsm" id="rwsort_score" onclick="setRwSort('score',this)" style="font-size:10px;padding:4px 8px;background:var(--surf);border:1px solid var(--bdr);color:var(--mut);">Score &#8593;</button>
-<button class="bsm" id="rwsort_name" onclick="setRwSort('name',this)" style="font-size:10px;padding:4px 8px;background:var(--surf);border:1px solid var(--bdr);color:var(--mut);">Name</button>
-<button class="bsm" id="rwsort_upd" onclick="setRwSort('upd',this)" style="font-size:10px;padding:4px 8px;background:var(--surf);border:1px solid var(--bdr);color:var(--mut);">Recent</button>
-</div>
-<div id="rwInlinePanel" style="display:none;background:var(--card);border:2px solid var(--amb);border-radius:16px;padding:16px;margin-bottom:10px;"></div>
-<div id="rwTaskList" style="min-height:120px;"></div>
-<div id="rwMilestone" style="display:none;"></div>
-</div>
-<!-- Activity panel -->
-<div id="rwActPanel" style="display:none;"><div id="rwActContent"></div></div>
 </div><!-- end pg11 -->
 
 <!-- ════════════════════════════════ pg12: REVIEW WORKSPACE V2 — PRODUCT REVIEW CASE (Phase 3A) ═══ -->
@@ -2171,11 +2130,6 @@ var role='admin',curPg=0,pinEnt='',pinRole='admin',acM=[],snapM='bc',cv='all',cu
 // Displacement beyond this threshold classifies the gesture as a scroll.
 var PBSRX_TAP_MOVE_THRESHOLD = 8;
 
-// CSS class assigned to the header strip of every Review Workspace task card.
-// The delegate uses this class to identify the collapse-intent region.
-// Taps on this element collapse an open card; taps elsewhere preserve editing state.
-var PBSRX_RW_HEADER_CLASS = 'rw-card-header';
-
 // Native interactive element tags that must always own their own interaction.
 // The delegated handler checks this list before any DOM traversal.
 var PBSRX_NATIVE_INTERACTIVE = {
@@ -2203,13 +2157,10 @@ function pbsrxTargetIsNative(el){
 }
 var KEY='pbsrx_v2';
 function save(){
-  // PERF EXPERIMENT: mark the Review Workspace queue as possibly stale.
+  // REVIEW WORKSPACE V2 PHASE 2: mark the V2 case cache as possibly stale.
   // S is already mutated by the caller before save() runs, regardless of
   // whether persistence below succeeds — so this must be unconditional.
-  rwTaskListDataStale=true;
-  // REVIEW WORKSPACE V2 PHASE 2: same reasoning, separate flag — see
-  // rw2CaseCacheStale near rw2EnsureCaseCache() for why this is not
-  // simply reusing rwTaskListDataStale above.
+  // See rw2CaseCacheStale near rw2EnsureCaseCache() for details.
   rw2CaseCacheStale=true;
   try{
     // Strip volatile runtime cache — rebuilt on demand, should never persist
@@ -2288,28 +2239,6 @@ try{
 var PID_MIGRATION_BATCH = 'PID-v1.0';
 var PID_SNAPSHOT_KEY = 'pbsrx_pid_snapshot';
 var pidParsedData = null;  // Holds parsed file data between phases
-
-// ── PRODUCT COMPLETENESS SCORE ───────────────────────────────────────────────
-// Computed — never stored. Called on demand.
-function computeCompleteness(p){
-  // RC3: implementation moved to Review Workspace Engine below
-  var score=0;var max=10.5;
-  if(p.genericName&&p.genericName.length>0)score+=2;
-  if(p.strength&&p.strength.length>0)score+=0.5;
-  if(p.form&&p.form.length>0)score+=0.5;
-  if(p.sellPrice&&p.sellPrice>0)score+=2;
-  if(p.costPrice&&p.costPrice>0)score+=0.5;
-  if(p.shelfLocation&&p.shelfLocation.length>0)score+=1;
-  if(p.category&&p.category!=='General'&&p.category!=='Other'&&p.category.length>0)score+=0.5;
-  if(p.sellUnit&&p.sellUnit!=='unit'&&p.sellUnit!=='Unit')score+=0.5;
-  if(p.isFastMover)score+=0.5;
-  if((p.supplier||p.primarySupplier||'').length>0)score+=0.5;
-  if(p.barcode&&p.barcode.length>0)score+=0.5;
-  if(p.nafdac&&p.nafdac.length>0)score+=0.5;
-  if(p.reorderQty&&p.reorderQty>0)score+=0.5;
-  if(p.minStock&&p.minStock!==10)score+=0.5;
-  return Math.round((score/max)*100);
-}
 
 // ── PRE-MIGRATION SNAPSHOT ───────────────────────────────────────────────────
 function pidTakeSnapshot(){
@@ -2934,111 +2863,28 @@ function pidStatCard(label, value, color){
 // Computed workspace — no storage, no sync, no duplicates.
 // Tasks generated on demand by scanning S.products[].
 // Tasks resolve automatically when the underlying data gap is filled.
-// RC3: Dashboard + Queue + Activity sub-tabs, inline editing,
-//      field filters, sort, sequential review, Resolve Later, milestones.
+// PHASE 3C.3: the legacy Dashboard/Queue/Activity sub-tabs, inline
+// task-card editing, field filters, sort, and milestone UI that used to
+// live here have been retired now that V2 (rw2* below) is the canonical
+// Review UI. generateReviewTasks() itself is unchanged and still required
+// — see rw2GenerateFindings(), pidShowReport(), and updReviewBadge().
 // ════════════════════════════════════════════════════════════════════════════
 
 // ── State ─────────────────────────────────────────────────────────────────
-var rwCurrentFilter='all';
-var rwFieldFilter='all';
-var rwCurrentSort='pri';
-var rwCurrentTab='v2open';
-var rwSkipped={};        // pid → true when "Resolve Later" tapped
-var rwExpandedPid=null;  // pid of currently expanded inline panel
-var rwExpandedType=null; // task type of expanded panel
+var rwCurrentTab='v2open'; // retained for the few external readers (diagnostics, saveProdEdit's legacy-tab check) — always 'v2open' now that no other Review sub-view exists
+var rwSkipped={};        // pid → true when a finding is deferred — SHARED with V2 (rw2DeferFinding)
 
-// PERF EXPERIMENT: true whenever data that could change generateReviewTasks()'s
-// output (S.products/S.stock/S.sales/S.reviewLog) may have changed since
-// #rwTaskList was last built. Set by save() — the single choke point nearly
-// every state-mutating action in the app already calls — so it's a safe,
-// conservative signal: it can only cause an unnecessary extra render, never a
-// stale one. Cleared by renderReviewWorkspace() once #rwTaskList is in sync.
-// Starts true so the very first Queue entry always renders.
-var rwTaskListDataStale=true;
-
-// ── Sub-tab controller ────────────────────────────────────────────────────
-function setRwTab(tab){
-  rwCurrentTab=tab;
-  ['v2open','dash','queue','act'].forEach(function(t){
-    var panel=document.getElementById(t==='v2open'?'rw2OpenPanel':t==='dash'?'rwDashPanel':t==='queue'?'rwQueuePanel':'rwActPanel');
-    var btn=document.getElementById('rwtab_'+t);
-    if(panel) panel.style.display=(t===tab?'block':'none');
-    if(btn){
-      btn.style.background=t===tab?'var(--blu3)':'none';
-      btn.style.color=t===tab?'var(--blu)':'var(--mut)';
-      btn.style.border=t===tab?'none':'1px solid var(--bdr)';
-    }
-  });
-  if(tab==='v2open') rw2RenderOpeningPanel();
-  else if(tab==='dash') renderRwDashboard();
-  else if(tab==='queue'){
-    // PERF EXPERIMENT: entering Queue previously always called the full
-    // renderReviewWorkspace() (regenerate all tasks + rebuild the entire
-    // #rwTaskList DOM), even when nothing that could change its output had
-    // happened since it was last rendered. Skip that full rebuild when the
-    // list is already known current (see rwTaskListDataStale above) — the
-    // filter/sort/skip state can't have changed either, since every control
-    // that changes them (setRwFilter/setRwFieldFilter/setRwSort/
-    // rwResolveLater/rwSaveInline) already forces its own full render.
-    // A card left expanded from a previous visit is still collapsed, via
-    // the existing local-card-update path (rwOpenInline), not a full render.
-    var listEl=document.getElementById('rwTaskList');
-    var alreadyCurrent=!rwTaskListDataStale&&listEl&&listEl.firstElementChild;
-    if(!alreadyCurrent){
-      rwExpandedPid=null;
-      renderReviewWorkspace();
-    } else if(rwExpandedPid!==null){
-      rwOpenInline(rwExpandedPid,rwExpandedType); // collapses the open card locally
-    }
-    rwRegisterQueueDelegates();
-  }
-  else if(tab==='act') renderRwActivity();
-}
-
-// ── Field filter controller ───────────────────────────────────────────────
-function setRwFieldFilter(f,el){
-  rwFieldFilter=f;
-  document.querySelectorAll('#rwFieldFilters .bsm').forEach(function(b){
-    b.style.background='var(--surf)';b.style.color='var(--mut)';b.style.border='1px solid var(--bdr)';
-  });
-  if(el){el.style.background='var(--blu3)';el.style.color='var(--blu)';el.style.border='none';}
-  rwExpandedPid=null;
-  renderReviewWorkspace();
-}
-
-// ── Sort controller ───────────────────────────────────────────────────────
-function setRwSort(s,el){
-  rwCurrentSort=s;
-  document.querySelectorAll('[id^="rwsort_"]').forEach(function(b){
-    b.style.background='var(--surf)';b.style.color='var(--mut)';b.style.border='1px solid var(--bdr)';
-  });
-  if(el){el.style.background='var(--blu3)';el.style.color='var(--blu)';el.style.border='none';}
-  renderReviewWorkspace();
-}
-
-// ── Priority filter controller (preserved) ────────────────────────────────
-function setRwFilter(f,el){
-  rwCurrentFilter=f;
-  rwFieldFilter='all';
-  document.querySelectorAll('#rwFilters .bsm').forEach(function(b){
-    b.style.background='none';b.style.borderColor='var(--bdr)';b.style.color='var(--mut)';
-  });
-  // Reset field filter UI
-  document.querySelectorAll('#rwFieldFilters .bsm').forEach(function(b){
-    b.style.background='var(--surf)';b.style.color='var(--mut)';b.style.border='1px solid var(--bdr)';
-  });
-  var ffAll=document.getElementById('rwff_all');
-  if(ffAll){ffAll.style.background='var(--blu3)';ffAll.style.color='var(--blu)';ffAll.style.border='none';}
-  if(el){
-    var colors={'1':'var(--red)','2':'var(--ora)','3':'var(--grn)','all':'var(--amb)'};
-    var bg={'1':'var(--red2)','2':'rgba(249,115,22,0.15)','3':'rgba(34,197,94,0.15)','all':'rgba(245,158,11,0.15)'};
-    el.style.background=bg[f]||'var(--surf)';
-    el.style.borderColor=colors[f]||'var(--amb)';
-    el.style.color=colors[f]||'#000';
-  }
-  rwExpandedPid=null;
-  renderReviewWorkspace();
-}
+// ════════════════════════════════════════════════════════════════════════════
+// SHARED REVIEW INFRASTRUCTURE — used by BOTH V2 and other app modules.
+// Established by the Phase 3C forensic audit: rwLog()/S.reviewLog,
+// rwPersistFieldChange(), rwBuildFieldEditorHtml() (and the
+// rwInlineMarginUpdate() it wires up via oninput= for sell_price/
+// price_inversion editors), rwSkipped{}, and save() (below, in the
+// persistence block) are NOT legacy-only despite their "rw" names — V2's
+// rw2SaveField()/rw2DeferFinding()/rw2BuildFindingTileInnerHtml() call
+// them directly. Do not remove, rename, or relocate anything in this
+// cluster.
+// ════════════════════════════════════════════════════════════════════════════
 
 // ── Review log helper ─────────────────────────────────────────────────────
 function rwLog(productId,productName,field,oldVal,newVal,source){
@@ -3138,118 +2984,15 @@ function rwPersistFieldChange(pid,field,value){
   return p;
 }
 
-// Legacy caller — preserves the exact prior rwSaveInline() behavior
-// (full Dashboard + Queue refresh) for the existing task-card UI.
-function rwSaveInline(pid,field,value){
-  var p=rwPersistFieldChange(pid,field,value);
-  if(!p)return;
-  updReviewBadge();
-  renderRwDashboard();
-  // Close inline panel and re-render queue
-  rwExpandedPid=null;
-  renderReviewWorkspace();
-  // PCIR-017 Tier 1: Show saved values for price fields — helps catch data-entry errors
-  var _toastMsg='\u2713 '+escH(p.genericName)+' \u2014 ';
-  if(field==='sellPrice'||field==='costPrice'){
-    _toastMsg+='Cost: '+N(p.costPrice||0)+' \u00b7 Sell: '+N(p.sellPrice||0);
-  } else {
-    _toastMsg+='updated';
-  }
-  toast(_toastMsg, 3000);
-  // Check milestone
-  rwCheckMilestone();
-}
-
-// ── Resolve Later ─────────────────────────────────────────────────────────
-function rwResolveLater(pid,type){
-  var key=pid+'_'+type;
-  rwSkipped[key]=true;
-  rwExpandedPid=null;
-  renderReviewWorkspace();
-  toast('Skipped \u2014 will return next session',1800);
-}
-
-// ── Inline panel renderer ─────────────────────────────────────────────────
-function rwOpenInline(pid,type){
-  // pid may be string (migrated products) or number — do not coerce
-  var collapsing=(rwExpandedPid===pid&&rwExpandedType===type);
-  var prevPid=rwExpandedPid, prevType=rwExpandedType;
-
-  // PERF EXPERIMENT: expand/collapse only changes which card shows its
-  // inline panel — it never changes the task set, filter, sort, badge, or
-  // summary strip (those are only touched by save/filter/sort/resolve
-  // paths, which still call the full renderReviewWorkspace()). So this can
-  // patch just the affected card(s) instead of rebuilding #rwTaskList.
-  // Falls back to the original full-render behavior whenever the target
-  // card isn't currently a rendered DOM node (e.g. list not yet painted,
-  // or the task is hidden by the active filter) — full render remains
-  // correct in every case, this is purely a fast path.
-  var targetCard=rwFindTaskCardEl(pid,type);
-  var tasks=targetCard?generateReviewTasks():null;
-  var targetTask=tasks?tasks.find(function(x){return String(x.pid)===String(pid)&&x.type===type;}):null;
-
-  if(!targetCard||!targetTask){
-    rwExpandedPid=collapsing?null:pid;
-    rwExpandedType=collapsing?null:type;
-    renderReviewWorkspace();
-    if(!collapsing) rwScrollInlinePanelIntoView();
-    return;
-  }
-
-  rwExpandedPid=collapsing?null:pid;
-  rwExpandedType=collapsing?null:type;
-
-  var prod=S.products.find(function(x){return String(x.id)===String(pid);});
-  var siblingTasks=tasks.filter(function(x){return String(x.pid)===String(pid);});
-  rwPatchTaskCardEl(targetCard,targetTask,prod,!collapsing,siblingTasks);
-
-  // If a different card was previously expanded, collapse it locally too —
-  // matches what a full re-render would do (only one card open at a time).
-  if(prevPid!==null&&!(String(prevPid)===String(pid)&&prevType===type)){
-    var prevCard=rwFindTaskCardEl(prevPid,prevType);
-    var prevTask=prevCard?tasks.find(function(x){return String(x.pid)===String(prevPid)&&x.type===prevType;}):null;
-    if(prevCard&&prevTask){
-      var prevProd=S.products.find(function(x){return String(x.id)===String(prevPid);});
-      var prevSiblings=tasks.filter(function(x){return String(x.pid)===String(prevPid);});
-      rwPatchTaskCardEl(prevCard,prevTask,prevProd,false,prevSiblings);
-    }
-  }
-
-  if(!collapsing) rwScrollInlinePanelIntoView();
-}
-
-// Replaces one card element in place with freshly-built HTML for the same
-// pid+type — same markup rwBuildTaskCardHtml() would have produced inside a
-// full renderReviewWorkspace() pass, just scoped to a single DOM node.
-function rwPatchTaskCardEl(cardEl,task,prod,isExpanded,siblingTasks){
-  var wrapper=document.createElement('div');
-  wrapper.innerHTML=rwBuildTaskCardHtml(task,prod,isExpanded,siblingTasks.length-1,siblingTasks);
-  cardEl.replaceWith(wrapper.firstElementChild);
-}
-
-function rwScrollInlinePanelIntoView(){
-  // Preserves prior behavior exactly, including its existing no-op: since
-  // RC3, #rwInlinePanel is always hidden (renderReviewWorkspace() sets
-  // display:none unconditionally — the inline panel now renders embedded
-  // inside each card instead), so this scrollIntoView has been inert in
-  // production before this change too. Left unchanged to avoid altering
-  // behavior beyond the tap-path DOM-rebuild scope of this experiment.
-  setTimeout(function(){
-    var el=document.getElementById('rwInlinePanel');
-    if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'});
-  },80);
-}
-
-// ── Field editor HTML builder ────────────────────────────────────────────
-// Extracted from renderRwInlinePanel() (pure extraction, byte-identical
-// output, no behavior change — same precedent as rwBuildTaskCardHtml's
-// extraction from renderReviewWorkspace() in the task-card local-update
-// experiment) so the V2 Product Review Case screen (Phase 3A) can reuse
-// the exact same, single, validated per-type editor markup instead of
-// duplicating it. Every generated control still uses the existing
-// data-rwaction/data-rwpid attributes handled by the existing delegated
-// listener (rwRegisterQueueDelegates() Delegate 2 -> rwSaveInline()) — no
-// new or duplicate persistence path.
+// ── Field editor HTML builder ──────────────────────────────
+// PHASE 3C.3: this is now the sole caller-facing editor builder — the
+// legacy task-card inline workflow that originally extracted it
+// (renderRwInlinePanel()/rwSaveInline()/rwOpenInline()) has been retired.
+// V2's rw2BuildFindingTileInnerHtml() (Phase 3A) is the only remaining
+// consumer of this markup. Every generated control still uses the
+// data-rwaction/data-rwpid attributes handled by V2's own delegated
+// listener (rw2RegisterCaseDelegates() -> rw2HandleFieldAction()) — no
+// duplicate persistence path.
 function rwBuildFieldEditorHtml(p,type){
   var cats=['Analgesics','Antibiotics','Controlled Medicines','Dermatology',
     'Eye Care & Men\'s Health','GI & Deworming','General','Supplements & GI',
@@ -3329,34 +3072,7 @@ function rwBuildFieldEditorHtml(p,type){
   return fieldHtml;
 }
 
-function renderRwInlinePanel(p,type,allTasksForPid){
-  var score=computeCompleteness(p);
-  var scoreColor=score>=80?'var(--grn)':score>=50?'var(--ora)':'var(--red)';
-  var id=p.id;
-  var fieldHtml=rwBuildFieldEditorHtml(p,type);
-
-  // Other tasks on this product
-  var otherTasks=allTasksForPid.filter(function(t){return t.type!==type;});
-  var otherHtml='';
-  if(otherTasks.length>0){
-    var priColors={1:'var(--red)',2:'var(--ora)',3:'var(--grn)',4:'var(--mut)'};
-    otherHtml='<div style="border-top:1px solid var(--bdr);margin-top:12px;padding-top:10px;"><div style="font-size:10px;color:var(--mut);font-weight:700;margin-bottom:6px;">OTHER OPEN TASKS ('+otherTasks.length+')</div>'+
-      otherTasks.map(function(t){
-        return '<div style="font-size:11px;color:var(--mut);padding:3px 0;">'+t.icon+' [P'+t.pri+'] '+t.desc+'</div>';
-      }).join('')+'</div>';
-  }
-
-  return '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">'+
-    '<div><div style="font-size:14px;font-weight:900;color:var(--txt);">'+escH(p.genericName)+(p.strength?' <span style="font-size:12px;color:var(--mut);">'+escH(p.strength)+'</span>':'')+'</div>'+
-    '<div style="font-size:11px;color:var(--mut);margin-top:2px;">'+(p.category||'\u2014')+' \u00b7 '+(p.shelfLocation||'No shelf')+' \u00b7 <span style="color:'+scoreColor+';font-weight:800;">'+score+'%</span> complete</div></div>'+
-    '<button data-rwaction="editfull" data-rwpid="'+id+'" style="font-size:10px;font-weight:700;background:none;border:1px solid var(--bdr);color:var(--mut);border-radius:8px;padding:5px 8px;cursor:pointer;touch-action:manipulation;">Edit Full ↗</button>'+
-    '</div>'+
-    fieldHtml+
-    '<div style="display:flex;gap:8px;margin-top:10px;">'+
-    '<button data-rwaction="resolvelater" data-rwpid="'+id+'" data-rwtype="'+type+'" style="flex:1;padding:10px;background:var(--surf);border:1px solid var(--bdr);color:var(--mut);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;">&#128336; Resolve Later</button>'+
-    '</div>'+
-    otherHtml;
-}
+// PHASE 3C.3: renderRwInlinePanel() (the legacy task-card inline editor wrapper) retired — rwBuildFieldEditorHtml() above is now consumed directly by V2 (rw2BuildFindingTileInnerHtml()).
 
 function rwInlineMarginUpdate(){
   var sellEl=document.getElementById('rwin_sell');
@@ -3844,15 +3560,9 @@ function rw2BuildProductReviewCases(){
 
 // ── Case cache ────────────────────────────────────────────────────────────
 // _rw2CaseCache: null until first built, otherwise Map<String(pid), case>.
-// rw2CaseCacheStale: set true by save() (see save(), alongside the
-// existing rwTaskListDataStale=true line added in the Queue-entry
-// experiment). Kept as its OWN flag rather than reusing rwTaskListDataStale
-// directly, because that flag is only ever cleared by the legacy
-// renderReviewWorkspace() — coupling this cache to it would leave the V2
-// cache permanently "stale" if a future V2 UI never calls the legacy full
-// render, or incorrectly "fresh" on first use before this cache has ever
-// been populated. A dedicated flag, set at the same single choke point
-// (save()), avoids both failure modes.
+// rw2CaseCacheStale: set true by save() (see save()) — a dedicated flag,
+// set at that single choke point, so the cache is invalidated on every
+// persisted change regardless of which UI triggered it.
 var _rw2CaseCache=null;
 var rw2CaseCacheStale=true;
 
@@ -4646,356 +4356,13 @@ function rw2BuildBucketButtonHtml(bucketKey,label,count,color){
 // END REVIEW WORKSPACE V2 — PHASE 3B
 // ════════════════════════════════════════════════════════════════════════════
 
-// ── Queue renderer (extended in RC3, preserves original structure) ─────────
-function renderReviewWorkspace(){
-  var qPanel=document.getElementById('rwQueuePanel');
-  if(!qPanel)return;
-
-  // Generated once and reused below for both the visible list and the summary
-  // strip — previously generated twice per render.
-  var allTasks=generateReviewTasks();
-
-  // Apply Resolve Later skips (skip list resets when page is navigated away)
-  var tasks=allTasks.filter(function(t){return !rwSkipped[t.pid+'_'+t.type];});
-
-  // Apply priority filter (preserved)
-  var filtered=rwCurrentFilter==='all'?tasks:tasks.filter(function(t){return String(t.pri)===rwCurrentFilter;});
-
-  // Apply field filter (RC3 new)
-  if(rwFieldFilter!=='all'){
-    var fieldMap={
-      price:['sell_price','cost_price','cost_price_ns','price_inversion'],
-      shelf:['shelf'],
-      supplier:['supplier'],
-      cat:['category'],
-      dup:['duplicate_name'],
-      owner:null, // handled by product ownership
-      cons:null
-    };
-    if(rwFieldFilter==='owner'){
-      filtered=filtered.filter(function(t){
-        var p=S.products.find(function(x){return x.id===t.pid;});
-        return p&&!p.isConsignment;
-      });
-    } else if(rwFieldFilter==='cons'){
-      filtered=filtered.filter(function(t){
-        var p=S.products.find(function(x){return x.id===t.pid;});
-        return p&&p.isConsignment;
-      });
-    } else if(fieldMap[rwFieldFilter]){
-      filtered=filtered.filter(function(t){return fieldMap[rwFieldFilter].indexOf(t.type)>=0;});
-    }
-  }
-
-  // Sort (RC3 new)
-  if(rwCurrentSort==='score'){
-    filtered.sort(function(a,b){return a.score-b.score;});
-  } else if(rwCurrentSort==='name'){
-    filtered.sort(function(a,b){return a.title.localeCompare(b.title);});
-  } else if(rwCurrentSort==='upd'){
-    var logMap={};
-    (S.reviewLog||[]).forEach(function(e){logMap[e.productId]=e.date;});
-    filtered.sort(function(a,b){
-      var da=logMap[a.pid]||'';var db=logMap[b.pid]||'';
-      return db.localeCompare(da);
-    });
-  } else {
-    // Default: priority, then hasSales desc, then score asc
-    filtered.sort(function(a,b){
-      if(a.pri!==b.pri)return a.pri-b.pri;
-      if(a.hasSales!==b.hasSales)return a.hasSales?-1:1;
-      return a.score-b.score;
-    });
-  }
-
-  // Summary strip (preserved) — reuses allTasks generated above
-  var counts={1:0,2:0,3:0,4:0};
-  allTasks.forEach(function(t){counts[t.pri]=(counts[t.pri]||0)+1;});
-  var sumEl=document.getElementById('rwSummary');
-  if(sumEl){
-    var priColors={1:'var(--red)',2:'var(--ora)',3:'var(--grn)',4:'var(--mut)'};
-    var priLabels={1:'Priority 1',2:'Priority 2',3:'Priority 3',4:'Priority 4'};
-    sumEl.innerHTML=[1,2,3,4].map(function(p){
-      return '<div onclick="setRwFilter(\''+p+'\',document.getElementById(\'rwf_p'+p+'\'))" style="background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:10px 14px;text-align:center;min-width:70px;cursor:pointer;">'+
-        '<div style="font-family:var(--fh);font-size:22px;color:'+priColors[p]+';font-weight:900;">'+counts[p]+'</div>'+
-        '<div style="font-size:10px;color:var(--mut);font-weight:700;">'+priLabels[p]+'</div></div>';
-    }).join('');
-  }
-
-  // Badge (preserved)
-  var p1count=counts[1]||0;
-  var rwBadge=document.getElementById('rwbg');
-  if(rwBadge){rwBadge.style.display=p1count>0?'inline-block':'none';rwBadge.textContent=p1count;}
-
-  var el=document.getElementById('rwTaskList');if(!el)return;
-  var inlineEl=document.getElementById('rwInlinePanel');
-
-  if(!S.products.length){
-    el.innerHTML='<div style="text-align:center;color:var(--mut);padding:40px 16px;"><div style="font-size:32px;margin-bottom:8px;">&#9989;</div><div style="font-size:14px;font-weight:700;">No products yet.</div><div style="font-size:12px;margin-top:4px;">Import products to generate Review tasks.</div></div>';
-    if(inlineEl)inlineEl.style.display='none';
-    rwTaskListDataStale=false;
-    return;
-  }
-  if(!filtered.length){
-    el.innerHTML='<div style="text-align:center;color:var(--grn);padding:40px 16px;"><div style="font-size:32px;margin-bottom:8px;">&#9989;</div><div style="font-size:14px;font-weight:800;">All tasks cleared!</div><div style="font-size:12px;color:var(--mut);margin-top:4px;">These fields are all populated. Great work.</div></div>';
-    if(inlineEl)inlineEl.style.display='none';
-    rwTaskListDataStale=false;
-    return;
-  }
-
-  // Build task cards
-  var html='<div style="font-size:11px;color:var(--mut);font-weight:700;padding:4px 0 8px;">'+
-    filtered.length+' task'+(filtered.length!==1?'s':'')+' &middot; Tap to resolve</div>';
-
-  // Render inline panel position: find the expanded task index
-  var expandedIdx=-1;
-  if(rwExpandedPid!==null){
-    expandedIdx=filtered.findIndex(function(t){return t.pid===rwExpandedPid&&t.type===rwExpandedType;});
-    if(expandedIdx<0){rwExpandedPid=null;rwExpandedType=null;}
-  }
-
-  // Built once for O(1) lookups inside the loop below — previously a linear
-  // S.products.find() and a linear filtered.filter() ran for every row,
-  // making this O(n²) in the number of visible tasks.
-  var prodMap={};
-  S.products.forEach(function(p){prodMap[p.id]=p;});
-  var tasksByPid={};
-  filtered.forEach(function(x){
-    if(!tasksByPid[x.pid])tasksByPid[x.pid]=[];
-    tasksByPid[x.pid].push(x);
-  });
-
-  filtered.forEach(function(t,idx){
-    var prod=prodMap[t.pid];
-    var isExpanded=(t.pid===rwExpandedPid&&t.type===rwExpandedType);
-    var allTasksForPid=tasksByPid[t.pid]||[];
-    var otherCount=allTasksForPid.length-1;
-    html+=rwBuildTaskCardHtml(t,prod,isExpanded,otherCount,allTasksForPid);
-  });
-
-  el.innerHTML=html;
-  if(inlineEl)inlineEl.style.display='none'; // inline panel is now embedded in cards
-  rwTaskListDataStale=false;
-}
-
-// ── Single task-card HTML builder (shared by full render and the local ─────
-// tap-path update in rwOpenInline) — extracted verbatim from the former
-// inline loop body so output is byte-identical in both call sites.
-function rwBuildTaskCardHtml(t,prod,isExpanded,otherCount,allTasksForPid){
-  var priColors={1:'var(--red)',2:'var(--ora)',3:'var(--grn)',4:'var(--mut)'};
-  var priBg={1:'var(--red2)',2:'rgba(249,115,22,0.12)',3:'rgba(34,197,94,0.08)',4:'var(--surf)'};
-  var priLabel={1:'P1',2:'P2',3:'P3',4:'P4'};
-  var score=prod?t.score:0;
-  var scoreColor=score>=80?'var(--grn)':score>=50?'var(--ora)':'var(--red)';
-  var barPct=score;
-
-  var html='<div data-rwtap="1" data-pid="'+t.pid+'" data-type="'+t.type+'" style="background:'+priBg[t.pri]+';border:1px solid '+(isExpanded?'var(--amb)':'var(--bdr)')+';border-radius:12px;padding:12px 14px;margin-bottom:6px;cursor:pointer;touch-action:manipulation;user-select:none;">'+'<div class="rw-card-header" style="display:flex;align-items:center;gap:10px;">'+
-    '<div style="font-size:20px;flex-shrink:0;">'+t.icon+'</div>'+
-    '<div style="flex:1;min-width:0;">'+
-      '<div style="font-size:13px;font-weight:800;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+t.title+'</div>'+
-      '<div style="font-size:11px;color:var(--mut);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+t.desc+'</div>'+
-      '<div style="margin-top:5px;display:flex;align-items:center;gap:6px;">'+
-        '<div style="flex:1;height:3px;background:var(--bdr);border-radius:2px;overflow:hidden;"><div style="width:'+barPct+'%;height:100%;background:'+scoreColor+';border-radius:2px;"></div></div>'+
-        '<span style="font-size:9px;color:'+scoreColor+';font-weight:800;flex-shrink:0;">'+score+'%</span>'+
-        (otherCount>0?'<span style="font-size:9px;color:var(--mut);">+'+otherCount+' more</span>':'')+
-      '</div>'+
-    '</div>'+
-    '<div style="flex-shrink:0;display:flex;align-items:center;gap:5px;">'+
-      '<span style="font-size:9px;font-weight:900;color:'+priColors[t.pri]+';background:'+priBg[t.pri]+';border:1px solid '+priColors[t.pri]+';border-radius:6px;padding:2px 5px;">'+priLabel[t.pri]+'</span>'+
-      '<span style="font-size:16px;color:var(--mut);">'+(isExpanded?'&#8963;':'&#8964;')+'</span>'+
-    '</div>'+
-    '</div>';
-
-  // Inline edit panel rendered directly after the expanded card
-  if(isExpanded&&prod){
-    html+='<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr);">'+
-      renderRwInlinePanel(prod,t.type,allTasksForPid)+
-    '</div>';
-  }
-
-  html+='</div>';
-  return html;
-}
-
-// ── Locate an existing rendered task-card element by pid+type ──────────────
-// Used by rwOpenInline() to patch a single card in place instead of
-// rebuilding #rwTaskList wholesale. Returns null if not currently rendered
-// (e.g. hidden by the active filter) — callers fall back to a full render.
-function rwFindTaskCardEl(pid,type){
-  var list=document.getElementById('rwTaskList');
-  if(!list) return null;
-  var cards=list.querySelectorAll('[data-rwtap="1"]');
-  for(var i=0;i<cards.length;i++){
-    if(cards[i].dataset.pid===String(pid)&&cards[i].dataset.type===type) return cards[i];
-  }
-  return null;
-}
-
-// ── Dashboard renderer ────────────────────────────────────────────────────
-function renderRwDashboard(){
-  var el=document.getElementById('rwDashContent');if(!el)return;
-  if(!S.products.length){
-    el.innerHTML='<div style="text-align:center;color:var(--mut);padding:40px 16px;"><div style="font-size:32px;">&#128202;</div><div style="font-size:14px;font-weight:700;margin-top:8px;">No products yet.</div><div style="font-size:12px;">Import your Product Master to activate the Dashboard.</div></div>';
-    return;
-  }
-
-  var tasks=generateReviewTasks();
-  var counts={1:0,2:0,3:0,4:0};
-  tasks.forEach(function(t){counts[t.pri]=(counts[t.pri]||0)+1;});
-
-  var total=S.products.length;
-  var fullyComplete=S.products.filter(function(p){return computeCompleteness(p)>=80;}).length;
-  var masterPct=Math.round(fullyComplete/total*100);
-  var avgScore=Math.round(S.products.reduce(function(s,p){return s+computeCompleteness(p);},0)/total);
-  var withPrice=S.products.filter(function(p){return p.sellPrice&&p.sellPrice>0;}).length;
-  var withCost=S.products.filter(function(p){return p.costPrice&&p.costPrice>0;}).length;
-  var withShelf=S.products.filter(function(p){return p.shelfLocation;}).length;
-  var withSup=S.products.filter(function(p){return p.supplier||p.primarySupplier;}).length;
-
-  // Critical alerts
-  var inversions=tasks.filter(function(t){return t.type==='price_inversion';}).length;
-  var dups=tasks.filter(function(t){return t.type==='duplicate_name';}).length;
-  var noOwnership=tasks.filter(function(t){return t.type==='ownership';}).length;
-
-  // Today's activity
-  var today=td();
-  var log=S.reviewLog||[];
-  var todayLog=log.filter(function(e){return e.date===today;});
-  var todayCount=todayLog.length;
-  var todayProds=new Set(todayLog.map(function(e){return e.productId;})).size;
-
-  var barColor=masterPct>=80?'var(--grn)':masterPct>=50?'var(--ora)':'var(--red)';
-
-  var html=
-  // Completion meter
-  '<div style="background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:16px;margin-bottom:10px;">'+
-    '<div style="font-size:10px;color:var(--mut);font-weight:700;letter-spacing:1px;margin-bottom:8px;">PRODUCT MASTER COMPLETENESS</div>'+
-    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">'+
-      '<div style="flex:1;height:10px;background:var(--surf);border-radius:5px;overflow:hidden;">'+
-        '<div style="width:'+masterPct+'%;height:100%;background:'+barColor+';border-radius:5px;transition:width .4s;"></div>'+
-      '</div>'+
-      '<div style="font-family:var(--fh);font-size:24px;color:'+barColor+';font-weight:900;flex-shrink:0;">'+masterPct+'%</div>'+
-    '</div>'+
-    '<div style="font-size:11px;color:var(--mut);">'+fullyComplete+' of '+total+' products fully complete (score \u226580%)</div>'+
-  '</div>'+
-
-  // Priority summary (tappable)
-  '<div style="display:flex;gap:8px;margin-bottom:10px;">'+
-  [1,2,3,4].map(function(p){
-    var pc={1:'var(--red)',2:'var(--ora)',3:'var(--grn)',4:'var(--mut)'};
-    var pb={1:'var(--red2)',2:'rgba(249,115,22,0.12)',3:'rgba(34,197,94,0.08)',4:'var(--surf)'};
-    var pl={1:'Critical',2:'Operational',3:'Enrichment',4:'Progressive'};
-    return '<div onclick="setRwTab(\'queue\');setTimeout(function(){setRwFilter(\''+p+'\',document.getElementById(\'rwf_p'+p+'\'));},60);" style="flex:1;background:'+pb[p]+';border:1px solid var(--bdr);border-radius:10px;padding:10px 6px;text-align:center;cursor:pointer;">'+
-      '<div style="font-family:var(--fh);font-size:20px;color:'+pc[p]+';font-weight:900;">'+counts[p]+'</div>'+
-      '<div style="font-size:9px;color:var(--mut);font-weight:700;">'+pl[p]+'</div></div>';
-  }).join('')+
-  '</div>'+
-
-  // Critical alerts
-  (inversions||dups||noOwnership?
-  '<div style="background:var(--red2);border:1px solid rgba(239,68,68,0.3);border-radius:12px;padding:12px 14px;margin-bottom:10px;">'+
-    '<div style="font-size:10px;font-weight:800;color:var(--red);letter-spacing:1px;margin-bottom:8px;">&#128308; CRITICAL ALERTS</div>'+
-    (inversions?'<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(239,68,68,0.2);"><span style="font-size:12px;color:var(--txt);">&#9888;&#65039; '+inversions+' products with sell price below cost</span><button onclick="setRwTab(\'queue\');setTimeout(function(){setRwFilter(\'1\',document.getElementById(\'rwf_p1\'));},60);" style="font-size:10px;font-weight:700;background:var(--red);color:#fff;border:none;border-radius:6px;padding:3px 8px;cursor:pointer;touch-action:manipulation;">Fix</button></div>':'') +
-    (dups?'<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(239,68,68,0.2);"><span style="font-size:12px;color:var(--txt);">&#128258; '+dups+' duplicate product names detected</span><button onclick="setRwFieldFilter(\'dup\',document.getElementById(\'rwff_dup\'));setRwTab(\'queue\');" style="font-size:10px;font-weight:700;background:var(--red);color:#fff;border:none;border-radius:6px;padding:3px 8px;cursor:pointer;touch-action:manipulation;">View</button></div>':'') +
-    (noOwnership?'<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;"><span style="font-size:12px;color:var(--txt);">&#10067; '+noOwnership+' products with unconfirmed ownership</span><button onclick="setRwFilter(\'1\',document.getElementById(\'rwf_p1\'));setRwTab(\'queue\');" style="font-size:10px;font-weight:700;background:var(--red);color:#fff;border:none;border-radius:6px;padding:3px 8px;cursor:pointer;touch-action:manipulation;">Fix</button></div>':'') +
-  '</div>':
-  '<div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:12px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:var(--grn);font-weight:700;">&#9989; No critical alerts \u2014 Product Master is healthy</div>') +
-
-  // Metrics grid
-  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">'+
-  [
-    ['Selling Price Set',withPrice+' / '+total,withPrice/total],
-    ['Cost Price Set',withCost+' / '+total,withCost/total],
-    ['Shelf Assigned',withShelf+' / '+total,withShelf/total],
-    ['Supplier Linked',withSup+' / '+total,withSup/total],
-  ].map(function(m){
-    var pct=Math.round(m[2]*100);
-    var col=pct>=80?'var(--grn)':pct>=50?'var(--ora)':'var(--red)';
-    return '<div style="background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:10px;">'+
-      '<div style="font-size:9px;color:var(--mut);font-weight:700;margin-bottom:4px;">'+m[0].toUpperCase()+'</div>'+
-      '<div style="font-size:15px;font-weight:900;color:'+col+';">'+m[1]+'</div>'+
-      '<div style="height:3px;background:var(--surf);border-radius:2px;margin-top:6px;overflow:hidden;">'+
-        '<div style="width:'+pct+'%;height:100%;background:'+col+';border-radius:2px;"></div>'+
-      '</div>'+
-    '</div>';
-  }).join('')+
-  '</div>'+
-
-  // Today's activity
-  '<div style="background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:12px 14px;margin-bottom:10px;">'+
-    '<div style="font-size:10px;color:var(--mut);font-weight:700;margin-bottom:8px;">&#128200; TODAY\'S ACTIVITY</div>'+
-    (todayCount>0?
-      '<div style="font-size:13px;color:var(--txt);">&#9989; <b>'+todayCount+'</b> changes to <b>'+todayProds+'</b> product'+(todayProds!==1?'s':'')+' today</div>'+
-      '<div style="font-size:11px;color:var(--mut);margin-top:4px;">Average score: '+avgScore+'%</div>':
-      '<div style="font-size:12px;color:var(--mut);">No changes yet today. Open the Queue to start reviewing.</div>')+
-  '</div>'+
-
-  // Quick actions
-  '<div style="display:flex;gap:8px;">'+
-    '<button onclick="setRwTab(\'queue\');setTimeout(function(){setRwFilter(\'1\',document.getElementById(\'rwf_p1\'));},60);" style="flex:1;padding:12px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;">&#128308; Fix '+counts[1]+' Critical</button>'+
-    '<button onclick="setRwTab(\'queue\')" style="flex:1;padding:12px;background:var(--amb);color:#000;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;">&#9999;&#65039; Open Queue</button>'+
-  '</div>';
-
-  el.innerHTML=html;
-}
-
-// ── Activity renderer ─────────────────────────────────────────────────────
-function renderRwActivity(){
-  var el=document.getElementById('rwActContent');if(!el)return;
-  var log=S.reviewLog||[];
-  if(!log.length){
-    el.innerHTML='<div style="text-align:center;color:var(--mut);padding:40px 16px;"><div style="font-size:32px;">&#128203;</div><div style="font-size:14px;font-weight:700;margin-top:8px;">No activity yet.</div><div style="font-size:12px;">Changes made in the Queue will appear here.</div></div>';
-    return;
-  }
-  var fieldLabels={sellPrice:'Selling Price',costPrice:'Cost Price',category:'Category',
-    shelfLocation:'Shelf',sellUnit:'Sell Unit',supplier:'Supplier',barcode:'Barcode',
-    nafdac:'NAFDAC',minStock:'Min Stock',reorderQty:'Reorder Qty',
-    isFastMover:'Stock Pulse',ownership:'Ownership'};
-  var html='<div style="font-size:10px;color:var(--mut);font-weight:700;margin-bottom:10px;">'+log.length+' change'+(log.length!==1?'s':'')+' recorded</div>';
-  var show=log.slice(0,100);
-  show.forEach(function(e){
-    var fLabel=fieldLabels[e.field]||e.field;
-    var oldDisp=(e.oldValue===null||e.oldValue===undefined||e.oldValue===''||e.oldValue===0)?'\u2014':String(e.oldValue);
-    var newDisp=(e.newValue===null||e.newValue===undefined||e.newValue==='')?'\u2014':String(e.newValue);
-    html+='<div style="background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;margin-bottom:6px;">'+
-      '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">'+
-        '<span style="font-size:10px;color:var(--mut);">'+e.date+' '+e.time+'</span>'+
-        '<span style="font-size:10px;color:var(--mut);font-weight:700;">'+((e.role||'owner').toUpperCase())+'</span>'+
-      '</div>'+
-      '<div style="font-size:13px;font-weight:800;color:var(--txt);margin-bottom:2px;">'+escH(e.productName||'')+'</div>'+
-      '<div style="font-size:11px;color:var(--mut);">'+fLabel+': <span style="color:var(--red);">'+escH(oldDisp)+'</span> \u2192 <span style="color:var(--grn);font-weight:700;">'+escH(newDisp)+'</span></div>'+
-    '</div>';
-  });
-  if(log.length>100){
-    html+='<div style="text-align:center;color:var(--mut);font-size:11px;padding:12px;">Showing 100 of '+log.length+' entries</div>';
-  }
-  el.innerHTML=html;
-}
-
-// ── Milestone checker ─────────────────────────────────────────────────────
-var rwLastMilestonePct=0;
-function rwCheckMilestone(){
-  if(!S.products.length)return;
-  var total=S.products.length;
-  var complete=S.products.filter(function(p){return computeCompleteness(p)>=80;}).length;
-  var pct=Math.round(complete/total*100);
-  var milestones=[80,90,95,100];
-  var hit=milestones.filter(function(m){return pct>=m&&rwLastMilestonePct<m;});
-  if(hit.length){
-    var m=hit[hit.length-1];
-    rwLastMilestonePct=pct;
-    var msg={80:'&#127881; 80% complete \u2014 Product Master is operational!',
-             90:'&#11088; 90% complete \u2014 Excellent data quality!',
-             95:'&#127942; 95% complete \u2014 Near-perfect Product Master!',
-             100:'&#127775; 100% \u2014 Perfect Product Master!'}[m]||'&#127881; Milestone reached!';
-    var el=document.getElementById('rwMilestone');
-    if(el){
-      el.innerHTML='<div style="background:linear-gradient(135deg,var(--amb),var(--grn));color:#000;border-radius:12px;padding:12px 16px;text-align:center;font-size:14px;font-weight:900;margin-top:8px;">'+msg+'</div>';
-      el.style.display='block';
-      setTimeout(function(){el.style.display='none';},5000);
-    }
-  }
-}
+// PHASE 3C.3: legacy Queue renderer (renderReviewWorkspace()), task-card
+// builder (rwBuildTaskCardHtml()), card DOM lookup (rwFindTaskCardEl()),
+// Dashboard renderer (renderRwDashboard()), Activity renderer
+// (renderRwActivity()), and the milestone celebration (rwCheckMilestone()/
+// rwLastMilestonePct) have all been retired — V2 (rw2* above) is now the
+// sole Review UI. updReviewBadge() below is unchanged and still required
+// (it is application-wide, not legacy-UI-specific — see Phase 3C's audit).
 
 // ── Badge updater (preserved) ─────────────────────────────────────────────
 function updReviewBadge(){
@@ -5008,177 +4375,11 @@ function updReviewBadge(){
 }
 
 
-// ── Review Workspace Interaction Delegates (PST-007 compliant) ──────────────
-// Architecture: see PBSRX INTERACTION ARCHITECTURE block above.
-// PST-007: Listeners scoped to #rwQueuePanel — the stable container that owns
-// all task card interactions. This eliminates scroll interference on touches
-// outside the task list (filter row, sort row, sub-tabs, summary strip).
-//
-// #rwQueuePanel is never replaced by innerHTML. Only #rwTaskList inside it is.
-// Registration is idempotent — guarded by _rwDelegatesRegistered flag.
-
-var _rwDelegatesRegistered = false;
-
-function rwRegisterQueueDelegates(){
-  if(_rwDelegatesRegistered) return;
-  var panel = document.getElementById('rwQueuePanel');
-  if(!panel) return;
-  _rwDelegatesRegistered = true;
-
-  // ── Delegate 1: Card expand / collapse (Interaction Delegate) ────────────
-  panel.addEventListener('touchend', function(e){
-
-  // RULE 1 — Native controls are sovereign.
-  // If the touch originated on or within a native interactive element,
-  // return immediately. The element owns this interaction completely.
-  if(pbsrxTargetIsNative(e.target)) return;
-
-  // RULE 4 — Scroll gestures must not expand cards. (PCIR-016)
-  // Measure vertical displacement from touch origin to lift point.
-  // Uses _swTouchY set by initSwipe's document touchstart — always fires first.
-  // Null-safety: if _swTouchY is undefined (initSwipe removed), dy=0 → guard skips.
-  // Failure mode is self-revealing (scroll causes expansion), not silent.
-  if(!e.changedTouches || !e.changedTouches[0]) return;
-  var dy = (_swTouchY !== undefined)
-    ? Math.abs(e.changedTouches[0].clientY - _swTouchY)
-    : 0;
-  if(dy > PBSRX_TAP_MOVE_THRESHOLD) return;
-
-  // Walk the DOM upward to find a Review Workspace task card.
-  var el=e.target;
-  while(el&&el!==document){
-    if(el.dataset&&el.dataset.rwtap){
-      var pid=el.dataset.pid;
-      var type=el.dataset.type;
-      var alreadyOpen=(String(rwExpandedPid)===String(pid)&&rwExpandedType===type);
-
-      if(alreadyOpen){
-        // RULE 2 — Editing sessions are protected.
-        // Only collapse the card if the touch landed on the declared header region.
-        // The header carries PBSRX_RW_HEADER_CLASS and is identified structurally,
-        // not by screen coordinates — correct at any zoom, font scale, or screen size.
-        var hitHeader=false;
-        var node=e.target;
-        while(node&&node!==el){
-          if(node.classList&&node.classList.contains(PBSRX_RW_HEADER_CLASS)){
-            hitHeader=true; break;
-          }
-          node=node.parentElement;
-        }
-        if(hitHeader){
-          e.preventDefault();
-          rwExpandedPid=null; rwExpandedType=null;
-          renderReviewWorkspace();
-        }
-        // Touch was inside the editing body — silently ignore to protect session.
-        return;
-      }
-
-      // Card is closed — open it.
-      e.preventDefault();
-      if(pid&&type) rwOpenInline(pid,type);
-      return;
-    }
-    el=el.parentElement;
-  }
-}, {passive:false});
-
-  // ── Delegate 2: Action buttons — Save, Resolve Later, Edit Full ──────────
-  panel.addEventListener('touchend', function(e){
-  var el=e.target;
-  // Walk up to find a data-rwaction element
-  while(el&&el!==document){
-    if(el.dataset&&el.dataset.rwaction){
-      e.preventDefault();
-      var action=el.dataset.rwaction;
-      var pid=el.dataset.rwpid;
-      var type=el.dataset.rwtype;
-
-      if(action==='resolvelater'){
-        rwResolveLater(pid, type);
-        return;
-      }
-      if(action==='editfull'){
-        openProdEdit(pid);
-        return;
-      }
-
-      // All save actions: read from the corresponding input
-      var val=null;
-      if(action==='saveprice'){
-        var s=Number((document.getElementById('rwin_sell')||{}).value||0);
-        var c=Number((document.getElementById('rwin_cost')||{}).value||0);
-        var origCost=Number(el.dataset.rwcost||0);
-        if(c&&c!==origCost) rwSaveInline(pid,'costPrice',c);
-        if(s) rwSaveInline(pid,'sellPrice',s);
-        return;
-      }
-      if(action==='savecost'){
-        val=Number((document.getElementById('rwin_cost2')||{}).value||0);
-        if(val) rwSaveInline(pid,'costPrice',val);
-        return;
-      }
-      if(action==='savecat'){
-        val=(document.getElementById('rwin_cat')||{}).value||'';
-        if(val) rwSaveInline(pid,'category',val);
-        return;
-      }
-      if(action==='saveshelf'){
-        val=((document.getElementById('rwin_shelf')||{}).value||'').trim();
-        if(val) rwSaveInline(pid,'shelfLocation',val);
-        return;
-      }
-      if(action==='saveunit'){
-        val=(document.getElementById('rwin_unit')||{}).value||'';
-        if(val) rwSaveInline(pid,'sellUnit',val);
-        return;
-      }
-      if(action==='savesup'){
-        val=(document.getElementById('rwin_sup')||{}).value||'';
-        if(val) rwSaveInline(pid,'supplier',val);
-        return;
-      }
-      if(action==='savebarcode'){
-        val=((document.getElementById('rwin_bc')||{}).value||'').trim();
-        if(val) rwSaveInline(pid,'barcode',val);
-        return;
-      }
-      if(action==='savenafdac'){
-        val=((document.getElementById('rwin_nf')||{}).value||'').trim();
-        if(val) rwSaveInline(pid,'nafdac',val);
-        return;
-      }
-      if(action==='saveminstock'){
-        val=Number((document.getElementById('rwin_mn')||{}).value||0);
-        if(val) rwSaveInline(pid,'minStock',val);
-        return;
-      }
-      if(action==='savereorderqty'){
-        val=Number((document.getElementById('rwin_rq')||{}).value||0);
-        if(val) rwSaveInline(pid,'reorderQty',val);
-        return;
-      }
-      if(action==='saveownership'){
-        var chk=document.querySelector('input[name=rwin_own]:checked');
-        if(chk) rwSaveInline(pid,'ownership',chk.value);
-        return;
-      }
-      if(action==='savefastmover'){
-        rwSaveInline(pid,'isFastMover',true);
-        return;
-      }
-      return;
-    }
-    el=el.parentElement;
-  }
-}, {passive:false});
-
-  if(window.PBSRx&&PBSRx.Diagnostics){
-    PBSRx.Diagnostics.log('ReviewWorkspace','REVIEW-EVENT-SCOPE',
-      'PST-007: delegates registered on #rwQueuePanel (not document)','ok',
-      {element:'rwQueuePanel',count:2});
-  }
-}
+// PHASE 3C.3: legacy Queue touch delegates (rwRegisterQueueDelegates(),
+// Delegate 1 card expand/collapse + Delegate 2 save/resolve/edit-full
+// actions, PST-007) retired along with #rwQueuePanel and the task-card UI
+// they were scoped to. V2's own delegate (rw2RegisterCaseDelegates(),
+// Phase 3A) is unaffected — it is a separate listener scoped to #pg12.
 
 // ════════════════════════════════════════════════════════════════════════════
 // END REVIEW WORKSPACE ENGINE
@@ -6469,7 +5670,7 @@ function goToNoHistory(idx,el){
   if(idx===6){try{renderRuleBasedCoach();}catch(e){}}
   if(idx===8){renderCustomers();try{setSfTab(0);}catch(e){}}
   if(idx===9){try{renderIntakeSummary();setIcTab(2);setTimeout(function(){icSetQuickCapture('aisnap');},100);}catch(e){}}
-  if(idx===11){try{setRwTab('v2open');}catch(e){try{renderReviewWorkspace();}catch(e2){}}try{rwRegisterQueueDelegates();}catch(e){}}
+  if(idx===11){try{rw2RenderOpeningPanel();}catch(e){}}
   if(idx===10){try{renderIntel();}catch(e){}}
 }
 function initSwipe(){
@@ -10874,11 +10075,10 @@ function saveProdEdit(){
   var supSel=document.getElementById('pe_supplier');
   if(supSel)p.primarySupplier=supSel.value;
   save();renderProdManager();renderPulse();updBadges();updProdCount();
-  // PIR-013: Refresh Review Workspace so resolved tasks disappear immediately.
-  // generateReviewTasks() is demand-computed — calling renderReviewWorkspace()
-  // is sufficient; no manual task removal is needed. PST-007: scoped to queue tab only.
+  // PIR-013: refresh the Review badge so it reflects edits made here too.
+  // PHASE 3C.3: legacy Queue-tab refresh retired along with the legacy UI —
+  // V2's case cache is already invalidated by save() (rw2CaseCacheStale).
   try{updReviewBadge();}catch(e){}
-  try{if(typeof rwCurrentTab!=='undefined'&&rwCurrentTab==='queue')renderReviewWorkspace();}catch(e){}
   if(window.PBSRx&&PBSRx.Diagnostics){
     PBSRx.Diagnostics.log('ReviewWorkspace','REVIEW-QUEUE-REFRESH',
       'saveProdEdit triggered queue refresh','ok',
@@ -14416,14 +13616,10 @@ PBSRx.Diagnostics = (function(){
     window.addEventListener('unhandledrejection', _onRejection);
 
     // ── 4. WORKFLOW: wrap key application functions ───────────────────────
-    _wrap('rwOpenInline',       'ReviewWorkspace', 'EXPAND',      _wrapRwOpen);
-    _wrap('rwSaveInline',       'ReviewWorkspace', 'SAVE',        _wrapRwSave);
-    _wrap('rwResolveLater',     'ReviewWorkspace', 'RESOLVE',     null);
     _wrap('openProdEdit',       'ReviewWorkspace', 'EDIT_FULL',   null);
     _wrap('posSelectFromDropdown','POS',            'SELECT',      _wrapPosSel);
     _wrap('showReceipt',        'POS',              'RECEIPT',     _wrapReceipt);
     _wrap('goToNoHistory',      'navigation',       'SCREEN',      _wrapNav);
-    _wrap('renderReviewWorkspace','rendering',      'RW_RENDER',   _wrapRender);
     _wrap('save',               'storage',          'SAVE',        _wrapSave);
   }
 
@@ -14469,36 +13665,6 @@ PBSRx.Diagnostics = (function(){
   }
 
   // ── Custom wrappers ───────────────────────────────────────────────────────
-  function _wrapRwOpen(name, module, type, orig){
-    return function(pid, taskType){
-      var p = window.S && window.S.products
-        ? window.S.products.find(function(x){return String(x.id)===String(pid);})
-        : null;
-      log(module, type, p ? p.genericName+' ['+taskType+']' : 'pid='+pid+' NOT FOUND',
-          p ? 'trace' : 'error', {pid:pid, type:taskType, found:!!p});
-      mark(name);
-      try{ orig.apply(this, arguments); }
-      catch(ex){ log('exceptions','ERROR',name+': '+ex.message,'error'); throw ex; }
-      measure(name, type);
-    };
-  }
-
-  function _wrapRwSave(name, module, type, orig){
-    return function(pid, field, value){
-      var p = window.S && window.S.products
-        ? window.S.products.find(function(x){return String(x.id)===String(pid);})
-        : null;
-      var focused = document.activeElement;
-      log(module, type,
-          (p?p.genericName:'pid='+pid+' NOT FOUND')+' → '+field+'='+JSON.stringify(value),
-          p?'ok':'error', {pid:pid, field:field, hasFocus:focused&&focused.tagName});
-      mark(name);
-      try{ orig.apply(this, arguments); }
-      catch(ex){ log('exceptions','ERROR',name+': '+ex.message,'error'); throw ex; }
-      measure(name, type);
-    };
-  }
-
   function _wrapPosSel(name, module, type, orig){
     return function(pid){
       var p = window.S && window.S.products
@@ -14536,23 +13702,6 @@ PBSRx.Diagnostics = (function(){
           'info', {from: typeof curPg!=='undefined'?curPg:null, to:idx});
       try{ return orig.apply(this, arguments); }
       catch(ex){ log('exceptions','ERROR',name+': '+ex.message,'error'); throw ex; }
-    };
-  }
-
-  function _wrapRender(name, module, type, orig){
-    return function(){
-      var focused = document.activeElement;
-      var hasFocus = focused && focused !== document.body && focused.tagName !== 'BODY';
-      if(hasFocus)
-        log(module,'DOM_REPLACE','renderReviewWorkspace() — focus on '+
-            focused.tagName+'#'+focused.id+' will be lost','warn',
-            {tag:focused.tagName, id:focused.id, value:focused.value});
-      else
-        log(module,'DOM_REPLACE','renderReviewWorkspace()','trace');
-      mark(name);
-      try{ orig.apply(this, arguments); }
-      catch(ex){ log('exceptions','ERROR',name+': '+ex.message,'error'); throw ex; }
-      measure(name, type);
     };
   }
 
