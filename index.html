@@ -330,11 +330,6 @@ body{background:var(--bg);}
 <div class="hlogo">PBS<span>Rx</span></div><div style="font-size:9px;color:var(--mut);margin-top:-2px;">v7.6.7-RC3.9.4A</div>
 <div style="display:flex;align-items:center;gap:10px;">
 <div class="hrole" id="hrole">ADMIN</div>
-<!-- PHASE 3A TEMPORARY TEST ENTRY POINT — Review Workspace V2 Product
-     Review Case. Does not replace the existing Review nav item; opens a
-     separate, isolated screen (pg12) reachable from anywhere in the app.
-     Intended to be removed once a real V2 opening screen exists. -->
-<button class="hso" id="rw2TestEntryBtn" onclick="rw2OpenTestEntry()" style="background:var(--amb);color:#000;font-weight:800;border-radius:8px;padding:5px 9px;font-size:10px;" title="Review Workspace V2 (Phase 3A) — temporary test entry point">&#9889; V2 Test</button>
 <button class="hso" onclick="signOut()">Sign out</button>
 </div>
 </div>
@@ -1937,14 +1932,20 @@ body{background:var(--bg);}
 <div class="pg" id="pg11">
 <div class="pgt">&#9889; Review Workspace</div>
 <div class="pgs" id="rwPgs">Product Data Quality Centre</div>
-<!-- RC3: Sub-tab bar -->
+<!-- RC3: Sub-tab bar (PHASE 3B: v2open added as the default/leftmost tab —
+     the new product-centric opening experience. Dashboard/Queue/Activity
+     remain fully intact, one tap away, as the migration fallback.) -->
 <div style="display:flex;gap:6px;margin-bottom:12px;">
-<button class="bsm bsb" id="rwtab_dash" onclick="setRwTab('dash')">&#128202; Dashboard</button>
+<button class="bsm bsb" id="rwtab_v2open" onclick="setRwTab('v2open')">&#9889; Review</button>
+<button class="bsm" id="rwtab_dash" onclick="setRwTab('dash')" style="background:none;border:1px solid var(--bdr);color:var(--mut);">&#128202; Dashboard</button>
 <button class="bsm" id="rwtab_queue" onclick="setRwTab('queue')" style="background:none;border:1px solid var(--bdr);color:var(--mut);">&#9999;&#65039; Queue</button>
 <button class="bsm" id="rwtab_act" onclick="setRwTab('act')" style="background:none;border:1px solid var(--bdr);color:var(--mut);">&#128203; Activity</button>
 </div>
+<!-- V2 Opening panel (PHASE 3B) — populated exclusively by rw2RenderOpeningPanel()
+     using the Phase 2 case cache; never generates the legacy task-card DOM. -->
+<div id="rw2OpenPanel"><div id="rw2OpenContent"></div></div>
 <!-- Dashboard panel -->
-<div id="rwDashPanel"><div id="rwDashContent"></div></div>
+<div id="rwDashPanel" style="display:none;"><div id="rwDashContent"></div></div>
 <!-- Queue panel -->
 <div id="rwQueuePanel" style="display:none;">
 <div id="rwSummary" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;"></div>
@@ -1981,13 +1982,12 @@ body{background:var(--bg);}
 </div><!-- end pg11 -->
 
 <!-- ════════════════════════════════ pg12: REVIEW WORKSPACE V2 — PRODUCT REVIEW CASE (Phase 3A) ═══ -->
-<!-- TEMPORARY test surface, reached only via the "⚡ V2 Test" header
-     button (see .hdr above) or programmatically via rw2OpenTestEntry()/
-     rw2ShowCase(pid). Intentionally NOT part of the main bottom nav
-     (#mainNav) — this does not replace the existing Review Workspace,
-     which remains fully available at its usual nav entry. All content
-     below is populated exclusively by the Phase 3A rw2* functions using
-     the Phase 2 engine; nothing here is generated from
+<!-- Reached from the "Review" sub-tab's opening screen inside #pg11
+     (rw2StartBucketReview()/rw2ContinueReview(), Phase 3B) or
+     programmatically via rw2ShowCase(pid). Intentionally NOT part of the
+     main bottom nav (#mainNav) — #pg11's own sub-tab bar still owns entry.
+     All content below is populated exclusively by the Phase 3A rw2*
+     functions using the Phase 2 engine; nothing here is generated from
      generateReviewTasks() directly. -->
 <div class="pg" id="pg12">
 <div class="pgt">Product Review</div>
@@ -2942,7 +2942,7 @@ function pidStatCard(label, value, color){
 var rwCurrentFilter='all';
 var rwFieldFilter='all';
 var rwCurrentSort='pri';
-var rwCurrentTab='dash';
+var rwCurrentTab='v2open';
 var rwSkipped={};        // pid → true when "Resolve Later" tapped
 var rwExpandedPid=null;  // pid of currently expanded inline panel
 var rwExpandedType=null; // task type of expanded panel
@@ -2959,8 +2959,8 @@ var rwTaskListDataStale=true;
 // ── Sub-tab controller ────────────────────────────────────────────────────
 function setRwTab(tab){
   rwCurrentTab=tab;
-  ['dash','queue','act'].forEach(function(t){
-    var panel=document.getElementById('rwPanel'===t?'rwDashPanel':t==='dash'?'rwDashPanel':t==='queue'?'rwQueuePanel':'rwActPanel');
+  ['v2open','dash','queue','act'].forEach(function(t){
+    var panel=document.getElementById(t==='v2open'?'rw2OpenPanel':t==='dash'?'rwDashPanel':t==='queue'?'rwQueuePanel':'rwActPanel');
     var btn=document.getElementById('rwtab_'+t);
     if(panel) panel.style.display=(t===tab?'block':'none');
     if(btn){
@@ -2969,7 +2969,8 @@ function setRwTab(tab){
       btn.style.border=t===tab?'none':'1px solid var(--bdr)';
     }
   });
-  if(tab==='dash') renderRwDashboard();
+  if(tab==='v2open') rw2RenderOpeningPanel();
+  else if(tab==='dash') renderRwDashboard();
   else if(tab==='queue'){
     // PERF EXPERIMENT: entering Queue previously always called the full
     // renderReviewWorkspace() (regenerate all tasks + rebuild the entire
@@ -3998,19 +3999,6 @@ var RW2_UI_GROUPS=[
 ];
 
 // ── Entry / exit ──────────────────────────────────────────────────────────
-// Temporary test entry point (see the header button). Picks the first
-// case from the Phase 2 deterministic ordering.
-function rw2OpenTestEntry(){
-  rw2CaseCacheStale=true; // ensure fresh data on manual test entry
-  rw2PreviousStack=[];
-  var first=rw2GetNextCase();
-  if(!first){
-    toast('No products currently need review (V2 test).',2500);
-    return;
-  }
-  rw2ShowCase(first.productId);
-}
-
 function rw2ShowCase(pid){
   rw2CurrentPid=pid;
   goToNoHistory(12);
@@ -4517,6 +4505,145 @@ function rw2HandleFieldAction(el,panel){
 }
 // ════════════════════════════════════════════════════════════════════════════
 // END REVIEW WORKSPACE V2 — PHASE 3A
+// ════════════════════════════════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════════════════════════
+// REVIEW WORKSPACE V2 — PHASE 3B: Opening Experience
+// ════════════════════════════════════════════════════════════════════════════
+// The permanent V2 entry point: the "Review" sub-tab inside #pg11 (default,
+// leftmost — see setRwTab()). Answers "which PRODUCTS need my attention?"
+// with three severity buckets, a Continue-where-I-left-off action, and a
+// same-day progress line — never the legacy P1-P4/task-count/filter-panel
+// vocabulary. Built entirely on the Phase 2 case cache (rw2GetAllCases()) —
+// no direct generateReviewTasks() call here, no legacy task-card DOM, no
+// #rwTaskList rendering. Read-only: nothing here mutates S.products or any
+// other persisted data; only entering a case and explicitly editing/saving a
+// field (the unchanged Phase 3A/3A.1/3A.2 path) does.
+
+// Classifies each non-resolved case into exactly one of the three opening
+// buckets, by its WORST ACTIONABLE finding's category (deliberately not
+// rw2ComputeOverallSeverity()'s case.overallSeverity, which also weighs
+// non-actionable findings like duplicate_name — a case whose only real
+// problem is operational shouldn't be filed under a bucket the user can't
+// act on from here). A case with zero actionable findings (RW2_STATUS.
+// RESOLVED, or defensively any other case with none) needs no attention and
+// is excluded — reuses the existing RW2_STATUS/RW2_CATEGORY/
+// RW2_SEVERITY_RANK constants and rw2GetAllCases(); does not duplicate the
+// underlying finding-detection logic (generateReviewTasks()/
+// rw2GenerateFindings()), only adds this thin presentational grouping.
+function rw2GetOpeningBuckets(){
+  var cases=rw2GetAllCases();
+  var buckets={critical:[],operational:[],cleanup:[]};
+  cases.forEach(function(c){
+    if(c.status===RW2_STATUS.RESOLVED)return;
+    var actionable=c.findings.filter(function(f){return f.actionable;});
+    if(!actionable.length)return;
+    var worst=actionable[0].category;
+    actionable.forEach(function(f){
+      if((RW2_SEVERITY_RANK[f.category]||99)<(RW2_SEVERITY_RANK[worst]||99))worst=f.category;
+    });
+    if(worst===RW2_CATEGORY.SALE_CRITICAL||worst===RW2_CATEGORY.SALE_CRITICAL_ADJACENT)buckets.critical.push(c);
+    else if(worst===RW2_CATEGORY.OPERATIONAL)buckets.operational.push(c);
+    else buckets.cleanup.push(c); // ENRICHMENT / METADATA / RELOCATED_PENDING_REVIEW
+  });
+  return buckets;
+}
+
+// "Today: N products reviewed" — reuses S.reviewLog (already populated by
+// rwPersistFieldChange(), the same persistence function both the legacy
+// inline panel and rw2SaveField() call), no new counter/state introduced.
+// Counts distinct products touched today, not raw edit count.
+function rw2CountTodayReviewed(){
+  var today=td();
+  var seen={};
+  (S.reviewLog||[]).forEach(function(e){
+    if(e.date===today)seen[String(e.productId)]=true;
+  });
+  return Object.keys(seen).length;
+}
+
+// Enters the first case in a bucket, ordered by the SAME comparator Next/
+// Previous already use (rw2CompareCasesForReview) — the bucket is only a
+// starting filter for which case you land on; once inside, Next/Previous
+// keep their existing, unmodified global-ordering behavior (Phase 3B scope
+// explicitly excludes changing Next/Previous ordering or the
+// ProductReviewCase architecture).
+function rw2StartBucketReview(bucketKey){
+  var list=rw2GetOpeningBuckets()[bucketKey];
+  if(!list||!list.length){
+    toast('Nothing in this bucket right now',1800);
+    return;
+  }
+  var ordered=list.slice().sort(rw2CompareCasesForReview);
+  rw2PreviousStack=[];
+  rw2ShowCase(ordered[0].productId);
+}
+
+// Resumes the in-session current case (rw2CurrentPid, Phase 3A — already
+// exists, no new state variable needed/introduced for this).
+function rw2ContinueReview(){
+  if(rw2CurrentPid==null){
+    toast('No review in progress this session',1800);
+    return;
+  }
+  rw2ShowCase(rw2CurrentPid);
+}
+
+// Renders the opening screen into #rw2OpenContent. Cost is proportional to
+// the number of products actually needing attention (via the Phase 2
+// cache), never to total catalog size or legacy task count — no per-product
+// DOM, just three bucket buttons with counts.
+function rw2RenderOpeningPanel(){
+  var el=document.getElementById('rw2OpenContent');
+  if(!el)return;
+  if(!S.products.length){
+    el.innerHTML='<div style="text-align:center;color:var(--mut);padding:40px 16px;"><div style="font-size:32px;">&#9889;</div><div style="font-size:14px;font-weight:700;margin-top:8px;">No products yet.</div><div style="font-size:12px;">Import your Product Master to start reviewing.</div></div>';
+    return;
+  }
+
+  var buckets=rw2GetOpeningBuckets();
+  var totalNeedsAttention=buckets.critical.length+buckets.operational.length+buckets.cleanup.length;
+
+  var html='';
+
+  if(rw2CurrentPid!=null){
+    var resumeProduct=S.products.find(function(p){return String(p.id)===String(rw2CurrentPid);});
+    html+='<button onclick="rw2ContinueReview()" style="width:100%;text-align:left;padding:14px 16px;margin-bottom:14px;background:var(--card);border:2px solid var(--amb);border-radius:14px;cursor:pointer;touch-action:manipulation;">'+
+      '<div style="font-size:13px;font-weight:800;color:var(--txt);">&#9654; Continue Review</div>'+
+      '<div style="font-size:11px;color:var(--mut);margin-top:2px;">'+(resumeProduct?'Resume: '+escH(resumeProduct.genericName):'Resume where you left off')+'</div>'+
+    '</button>';
+  }
+
+  if(!totalNeedsAttention){
+    html+='<div style="text-align:center;color:var(--mut);padding:32px 16px;background:var(--card);border:1px solid var(--bdr);border-radius:14px;">'+
+      '<div style="font-size:28px;">&#127881;</div>'+
+      '<div style="font-size:14px;font-weight:800;color:var(--txt);margin-top:6px;">All caught up</div>'+
+      '<div style="font-size:12px;margin-top:4px;">Nothing currently needs review.</div>'+
+    '</div>';
+  } else {
+    html+='<div style="font-size:11px;font-weight:800;color:var(--mut);letter-spacing:0.5px;margin-bottom:8px;text-transform:uppercase;">Needs Attention</div>';
+    html+=rw2BuildBucketButtonHtml('critical','&#128308; Start Critical Review',buckets.critical.length,'var(--red)');
+    html+=rw2BuildBucketButtonHtml('operational','&#128992; Start Operational Review',buckets.operational.length,'var(--ora)');
+    html+=rw2BuildBucketButtonHtml('cleanup','&#128203; Clean Up Data',buckets.cleanup.length,'var(--mut)');
+  }
+
+  html+='<div style="text-align:center;font-size:11px;color:var(--mut);margin-top:16px;">Today: '+rw2CountTodayReviewed()+' product'+(rw2CountTodayReviewed()===1?'':'s')+' reviewed</div>';
+
+  el.innerHTML=html;
+}
+
+function rw2BuildBucketButtonHtml(bucketKey,label,count,color){
+  var disabled=count===0;
+  return '<button onclick="'+(disabled?'':'rw2StartBucketReview(\''+bucketKey+'\')')+'" '+(disabled?'disabled':'')+' style="width:100%;text-align:left;padding:14px 16px;margin-bottom:8px;background:var(--card);border:1px solid var(--bdr);border-radius:14px;cursor:'+(disabled?'default':'pointer')+';touch-action:manipulation;opacity:'+(disabled?'0.5':'1')+';">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;">'+
+      '<div style="font-size:13px;font-weight:800;color:var(--txt);">'+label+'</div>'+
+      '<div style="font-size:12px;font-weight:800;color:'+color+';">'+count+'</div>'+
+    '</div>'+
+    '<div style="font-size:11px;color:var(--mut);margin-top:2px;">'+count+' product'+(count===1?'':'s')+'</div>'+
+  '</button>';
+}
+// ════════════════════════════════════════════════════════════════════════════
+// END REVIEW WORKSPACE V2 — PHASE 3B
 // ════════════════════════════════════════════════════════════════════════════
 
 // ── Queue renderer (extended in RC3, preserves original structure) ─────────
@@ -6342,7 +6469,7 @@ function goToNoHistory(idx,el){
   if(idx===6){try{renderRuleBasedCoach();}catch(e){}}
   if(idx===8){renderCustomers();try{setSfTab(0);}catch(e){}}
   if(idx===9){try{renderIntakeSummary();setIcTab(2);setTimeout(function(){icSetQuickCapture('aisnap');},100);}catch(e){}}
-  if(idx===11){try{setRwTab('dash');}catch(e){try{renderReviewWorkspace();}catch(e2){}}try{rwRegisterQueueDelegates();}catch(e){}}
+  if(idx===11){try{setRwTab('v2open');}catch(e){try{renderReviewWorkspace();}catch(e2){}}try{rwRegisterQueueDelegates();}catch(e){}}
   if(idx===10){try{renderIntel();}catch(e){}}
 }
 function initSwipe(){
