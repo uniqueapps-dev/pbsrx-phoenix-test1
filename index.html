@@ -4245,45 +4245,57 @@ function rw2LegacyTypeOf(finding){
 // accordion tile (rw2BuildFindingTileInnerHtml); deferred and read-only/
 // non-actionable tiles have no editor to hide, so they always render their
 // single, already-minimal state and never register as the expanded id.
+// PHASE 3A.2: a deferred finding is "not dealt with now," not "fixed" — it
+// must stay reachable, never a dead tile. A deferred ACTIONABLE finding is
+// still a normal accordion tile (tappable, same editor on expand); only a
+// deferred NON-actionable finding (which never had an editor to reopen)
+// gets the same safe "Edit Full Product" route its live counterpart
+// already has, instead of doing nothing. rwSkipped[deferKey] is never
+// cleared just by rendering or expanding a tile — only an actual save that
+// makes the finding's detection condition false removes it (via
+// rw2RecomputeProductCase(), unchanged from Phase 2/3A), or the user
+// re-deferring it (idempotent — same boolean flag, no duplicate records).
+var RW2_DEFERRED_BADGE_HTML=' <span style="font-size:10px;font-weight:800;color:var(--mut);background:var(--bg);border:1px solid var(--bdr);border-radius:6px;padding:1px 6px;margin-left:6px;">DEFERRED</span>';
+
 function rw2BuildFindingCardHtml(finding,readOnly,expanded){
   var legacyType=rw2LegacyTypeOf(finding);
   var deferKey=finding.deferKey;
   var deferred=!!rwSkipped[deferKey];
   var cardStyle='background:var(--surf);border:1px solid var(--bdr);border-radius:12px;padding:12px 14px;margin-bottom:8px;';
 
-  if(deferred){
-    var body='<div style="font-size:13px;font-weight:700;color:var(--txt);">'+escH(finding.description)+'</div>';
-    body+='<div style="font-size:11px;color:var(--mut);margin-top:6px;">&#128336; Deferred this session</div>';
-    return '<div data-findingid="'+finding.id+'" style="'+cardStyle+'opacity:0.6;">'+body+'</div>';
-  }
-
   if(readOnly||!finding.actionable){
-    // duplicate_name / expiry — no editor invented, no destructive action.
-    var body='<div style="font-size:13px;font-weight:700;color:var(--txt);">'+escH(finding.description)+'</div>';
+    // duplicate_name / expiry — no editor invented, no destructive action,
+    // deferred or not. A deferred one still gets the Edit Full Product
+    // route so tapping it is never a silent dead end.
+    var body='<div style="font-size:13px;font-weight:700;color:var(--txt);">'+escH(finding.description)+(deferred?RW2_DEFERRED_BADGE_HTML:'')+'</div>';
     var note=finding.category===RW2_CATEGORY.SPECIAL_REVIEW
       ?'Requires manual review — not editable from this screen. Use Edit Full Product for full context.'
       :'Not editable from this screen.';
     body+='<div style="font-size:11px;color:var(--mut);margin-top:6px;line-height:1.5;">'+note+'</div>'+
       '<button data-rwaction="editfull" data-rwpid="'+finding.productId+'" style="margin-top:8px;font-size:10px;font-weight:700;background:none;border:1px solid var(--bdr);color:var(--mut);border-radius:8px;padding:6px 10px;cursor:pointer;touch-action:manipulation;">Edit Full Product &#8599;</button>';
-    return '<div data-findingid="'+finding.id+'" style="'+cardStyle+'">'+body+'</div>';
+    return '<div data-findingid="'+finding.id+'" style="'+cardStyle+(deferred?'opacity:0.7;':'')+'">'+body+'</div>';
   }
 
-  // Actionable, not deferred: accordion tile (collapsed or expanded).
+  // Actionable: accordion tile whether deferred or not — reopening a
+  // deferred finding is the same tap-to-expand interaction as a live one.
   return '<div data-findingid="'+finding.id+'" style="'+cardStyle+'">'+
-    rw2BuildFindingTileInnerHtml(finding,legacyType,expanded)+
+    rw2BuildFindingTileInnerHtml(finding,legacyType,expanded,deferred)+
   '</div>';
 }
 
 // The INNER content of one accordion tile — shared by the full render path
 // above and the local toggle patch below, so collapse/expand never
 // duplicates the editor-building logic. Collapsed: chevron + description
-// only, no editor controls. Expanded: same header (now tappable to
-// collapse) plus the SAME rwBuildFieldEditorHtml() editor + Resolve Later
-// button the legacy inline panel uses.
-function rw2BuildFindingTileInnerHtml(finding,legacyType,expanded){
-  var headerHtml='<div data-rwaction="togglefinding" data-findingid="'+finding.id+'" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;touch-action:manipulation;">'+
+// (+ a DEFERRED badge, dimmed, if applicable) only, no editor controls.
+// Expanded: same header (now tappable to collapse) plus the SAME
+// rwBuildFieldEditorHtml() editor + Resolve Later button the legacy inline
+// panel uses — identical whether this finding was deferred or not, so
+// reopening a deferred finding never invents a second editor path.
+function rw2BuildFindingTileInnerHtml(finding,legacyType,expanded,deferred){
+  var dimStyle=(deferred&&!expanded)?'opacity:0.65;':'';
+  var headerHtml='<div data-rwaction="togglefinding" data-findingid="'+finding.id+'" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;touch-action:manipulation;'+dimStyle+'">'+
     '<span style="flex-shrink:0;font-size:11px;color:var(--mut);margin-top:2px;">'+(expanded?'&#9660;':'&#9654;')+'</span>'+
-    '<span style="font-size:13px;font-weight:700;color:var(--txt);">'+escH(finding.description)+'</span>'+
+    '<span style="font-size:13px;font-weight:700;color:var(--txt);">'+escH(finding.description)+(deferred?RW2_DEFERRED_BADGE_HTML:'')+'</span>'+
   '</div>';
 
   if(!expanded)return headerHtml;
@@ -4293,7 +4305,7 @@ function rw2BuildFindingTileInnerHtml(finding,legacyType,expanded){
 
   return headerHtml+
     '<div style="margin-top:10px;">'+editorHtml+'</div>'+
-    '<button data-rwaction="resolvelater" data-rwpid="'+finding.productId+'" data-rwtype="'+legacyType+'" style="width:100%;margin-top:8px;padding:9px;background:none;border:1px solid var(--bdr);color:var(--mut);border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;touch-action:manipulation;">&#128336; Resolve Later</button>';
+    '<button data-rwaction="resolvelater" data-rwpid="'+finding.productId+'" data-rwtype="'+legacyType+'" data-deferkey="'+finding.deferKey+'" style="width:100%;margin-top:8px;padding:9px;background:none;border:1px solid var(--bdr);color:var(--mut);border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;touch-action:manipulation;">&#128336; Resolve Later</button>';
 }
 
 // PHASE 3A.1: toggling a tile is a LOCAL DOM patch — at most two
@@ -4328,7 +4340,7 @@ function rw2PatchFindingTile(panel,reviewCase,findingId,expanded){
     if(reviewCase.findings[i].id===findingId){f=reviewCase.findings[i];break;}
   }
   if(!f)return;
-  node.innerHTML=rw2BuildFindingTileInnerHtml(f,rw2LegacyTypeOf(f),expanded);
+  node.innerHTML=rw2BuildFindingTileInnerHtml(f,rw2LegacyTypeOf(f),expanded,!!rwSkipped[f.deferKey]);
 }
 
 // ── Save / defer handlers ─────────────────────────────────────────────────
@@ -4359,6 +4371,19 @@ function rw2DeferFinding(pid,deferKey){
   toast('Skipped — will return next session',1800);
   rw2RecomputeProductCase(pid);
   if(rw2CurrentPid!=null&&String(rw2CurrentPid)===String(pid)){
+    // PHASE 3A.2: if the finding just deferred was the expanded tile,
+    // collapse it back down rather than leaving its editor sitting open
+    // with a DEFERRED badge — the tap said "not now," so the accordion
+    // should reflect that. Never jumps to a different default finding
+    // here; it just collapses to nothing, same as legacy Resolve Later
+    // always closing rwExpandedPid.
+    if(rw2ExpandedFindingId!=null){
+      var deferredCase=rw2GetCase(pid);
+      var expandedFinding=deferredCase?deferredCase.findings.find(function(f){return f.id===rw2ExpandedFindingId;}):null;
+      if(expandedFinding&&expandedFinding.deferKey===deferKey){
+        rw2ExpandedFindingId=null;
+      }
+    }
     rw2RenderCaseScreen();
   }
 }
@@ -4405,7 +4430,16 @@ function rw2HandleFieldAction(el,panel){
   var type=el.dataset.rwtype;
 
   if(action==='resolvelater'){
-    rw2DeferFinding(pid,pid+'_'+type);
+    // PHASE 3A.2 FIX: use the finding's own deferKey (carried on the button
+    // as data-deferkey) rather than reconstructing pid+'_'+legacyType.
+    // Those two diverge for the merged missing_cost_price finding (Phase 1
+    // merges the legacy cost_price/cost_price_ns pair under deferKey
+    // pid+'_missing_cost_price', while its legacyType for editor purposes
+    // is 'cost_price_ns') — reconstructing produced a defer key that never
+    // matched what rw2DeriveStatus/rw2BuildFindingCardHtml actually read,
+    // so deferring that finding silently no-opped. Falls back to the old
+    // reconstruction only if data-deferkey is somehow absent.
+    rw2DeferFinding(pid,el.dataset.deferkey||(pid+'_'+type));
     return;
   }
   if(action==='editfull'){
